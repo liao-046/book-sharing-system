@@ -50,7 +50,12 @@
  - 組員3: 廖芷嫺 | 後端邏輯（PHP 控制流程）
  - 全員 | 資料庫設計與整合（包括DDL撰寫、ER圖轉換、報告撰寫與GitHub維護）
 ## 4. report 2修改內容
- - 修改後之ER-diagram
- ![修改後之ER-diagram](image_01.png)
  - phpmyadmin產生的diagram
  ![phpmyadmin產生的diagram](<image_02.png>)
+
+ 以個人化書籍收藏與分享為主，總共定義6個entity sets：user, book, bookshelf, bookshelf_record, review, silent_share；6個relations：use_by, review_by, review_of, receives, share_book, bookshelf_record。
+ - use_by：多對一關係。一位使用者可以建立多個書櫃，一個書櫃只能有一位使用者所持有，且一位使用者至少要有一個書櫃。
+ - review_by：多對一關係。一位使用者可以對多本書籍進行評論和評分，但一個評論只能源於一位使用者，使用者可以無評論。
+ - review_of：多對一關係。一本書籍可以有多個評論，一個評論只能代表評論一本書籍，書籍可以無評論。
+ - receives : 多對一關係。一位使用者可以收到多個靜音分享，一個靜音分享內容
+ - bookshelf_record：多對多關係。一個書櫃可以存放多本書籍，一本書也可以存放於多個書櫃中。
