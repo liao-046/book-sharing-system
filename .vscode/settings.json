@@ -1,0 +1,19 @@
+{
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "previewLimit": 50,
+            "server": "140.122.184.128",
+            "port": 3306,
+            "driver": "MySQL",
+            "name": "Remote MySQL (team19)",
+            "group": "team19",
+            "username": "team19",
+            "password": "Wy$Kq83Nbm",
+            "database": "team19"
+        }
+    ]
+}

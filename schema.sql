@@ -19,7 +19,7 @@ CREATE TABLE book(
     description TEXT
 );
 
-CREATE TABLE book_self(
+CREATE TABLE book_shelf(
     shelf_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50)
 );
