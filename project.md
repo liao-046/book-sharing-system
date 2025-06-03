@@ -43,10 +43,7 @@
 ###  資料庫連線與技術細節
 - **後端語言**：Node.js + Express 或 Python
 - **資料庫**：MYSQL
-- **連線套件**：
-  - Node.js 使用 ’pg‘
-  - Python 使用 ’SQLAlchemy‘
-- **資料交換格式**：JSON，採用 RESTful API 設計
+
 - **安全設計**：
   - 密碼使用 ‘bcrypt’ 雜湊儲存
   - 查詢皆使用參數化語法防止 SQL injection
