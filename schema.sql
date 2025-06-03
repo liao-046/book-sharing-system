@@ -26,9 +26,13 @@ CREATE TABLE book_self(
 
 CREATE TABLE review(
     review_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    book_id INT,
     rating INT CHECK(rating BETWEEN 1 AND 5),
     comment TEXT, 
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(book_id) REFERENCES book(book_id) ON DELETE CASCADE,
+    FOREIGN KEY(user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE slient_share(
@@ -56,11 +60,13 @@ CREATE TABLE receives(
     FOREIGN KEY(user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 
-CREATE TABLE review_by(
-    review_id INT PRIMARY KEY,
-    user_id INT,
-    FOREIGN KEY(review_id) REFERENCES review(review_id), 
-    FOREIGN KEY(user_id) REFERENCES review(user_id)
+CREATE TABLE bookshelf_record(
+    shelf_id INT,
+    book_id INT,
+    add_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(shelf_id, book_id),
+    FOREIGN KEY(silent_Share_id) REFERENCES silent_share(silent_share_id) ON DELETE CASCADE,
+    FOREIGN KEY(user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 
 
