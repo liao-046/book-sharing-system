@@ -43,7 +43,7 @@
 ###  資料庫連線與技術細節
 - **後端語言**：Node.js + Express 或 Python
 - **資料庫**：MYSQL
-
+- **資料庫管理工具**：phpMyAdmin
 - **安全設計**：
   - 密碼使用 ‘bcrypt’ 雜湊儲存
   - 查詢皆使用參數化語法防止 SQL injection
