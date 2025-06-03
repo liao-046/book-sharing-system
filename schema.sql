@@ -56,7 +56,7 @@ CREATE TABLE receives(
     user_id INT, 
     silent_share_id INT, 
     PRIMARY KEY(user_id, silent_share_id),
-    FOREIGN KEY(silent_Share_id) REFERENCES silent_share(silent_share_id) ON DELETE CASCADE,
+    FOREIGN KEY(silent_share_id) REFERENCES silent_share(silent_share_id) ON DELETE CASCADE,
     FOREIGN KEY(user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 
