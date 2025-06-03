@@ -53,3 +53,5 @@
 ## 4. report 2修改內容
  - 修改後之ER-diagram
  ![修改後之ER-diagram](image_01.png)
+ 
+ ![phpmyadmin產生的diagram](<image_02.png>)
