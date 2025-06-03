@@ -41,8 +41,8 @@
  - **靜音分享接收頁**：接收者登入後可看到尚未解鎖的靜音推薦書單。當條件成立後，自動顯示推薦書籍與訊息內容。
 
 ###  資料庫連線與技術細節
-- **後端語言**：Node.js + Express 或 Python（Flask / Django）
-- **資料庫**：PostgreSQL（或 MySQL）
+- **後端語言**：Node.js + Express 或 Python
+- **資料庫**：MYSQL
 - **連線套件**：
   - Node.js 使用 `pg`
   - Python 使用 `SQLAlchemy`
