@@ -35,7 +35,7 @@ CREATE TABLE review(
     FOREIGN KEY(user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 
-CREATE TABLE slient_share(
+CREATE TABLE silent_share(
     silent_share_id INT AUTO_INCREMENT PRIMARY KEY,
     message TEXT,
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -48,7 +48,7 @@ CREATE TABLE share_book(
     silent_share_id INT,
     book_id INT,
     PRIMARY KEY(silent_share_id, book_id),
-    FOREIGN KEY(silent_Share_id) REFERENCES silent_share(silent_share_id) ON DELETE CASCADE,
+    FOREIGN KEY(silent_share_id) REFERENCES silent_share(silent_share_id) ON DELETE CASCADE,
     FOREIGN KEY(book_id) REFERENCES book(book_id) ON DELETE CASCADE
 );
 
@@ -65,7 +65,7 @@ CREATE TABLE bookshelf_record(
     book_id INT,
     add_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY(shelf_id, book_id),
-    FOREIGN KEY(silent_Share_id) REFERENCES silent_share(silent_share_id) ON DELETE CASCADE,
+    FOREIGN KEY(silent_share_id) REFERENCES silent_share(silent_share_id) ON DELETE CASCADE,
     FOREIGN KEY(user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 
