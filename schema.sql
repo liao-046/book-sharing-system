@@ -48,12 +48,22 @@ CREATE TABLE share_book(
     FOREIGN KEY(book_id) REFERENCES book(book_id) ON DELETE CASCADE
 );
 
+CREATE TABLE receives(
+    user_id INT, 
+    silent_share_id INT, 
+    PRIMARY KEY(user_id, silent_share_id),
+    FOREIGN KEY(silent_Share_id) REFERENCES silent_share(silent_share_id) ON DELETE CASCADE,
+    FOREIGN KEY(user_id) REFERENCES user(user_id) ON DELETE CASCADE
+);
+
 CREATE TABLE review_by(
     review_id INT PRIMARY KEY,
     user_id INT,
     FOREIGN KEY(review_id) REFERENCES review(review_id), 
     FOREIGN KEY(user_id) REFERENCES review(user_id)
 );
+
+
 
 
 
