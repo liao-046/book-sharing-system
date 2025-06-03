@@ -19,4 +19,4 @@
  - 組員3: 廖芷嫺 | 後端邏輯（PHP 控制流程）
  - 全員 | 資料庫設計與整合（包括DDL撰寫、ER圖轉換、報告撰寫與GitHub維護）
 ## 4. report 2修改內容
- - 修改後之ER-diagram(sql-book-project/image_01.png)
+ - ![修改後之ER-diagram](image_01.png)
