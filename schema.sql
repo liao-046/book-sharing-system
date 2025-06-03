@@ -39,3 +39,23 @@ CREATE TABLE slient_share(
     is_open BOOLEAN DEFAULT FALSE,
     open_time DATETIME
 );
+
+CREATE TABLE share_book(
+    silent_share_id INT,
+    book_id INT,
+    PRIMARY KEY(silent_share_id, book_id),
+    FOREIGN KEY(silent_Share_id) REFERENCES silent_share(silent_share_id) ON DELETE CASCADE,
+    FOREIGN KEY(book_id) REFERENCES book(book_id) ON DELETE CASCADE
+);
+
+CREATE TABLE review_by(
+    review_id INT PRIMARY KEY,
+    user_id INT,
+    FOREIGN KEY(review_id) REFERENCES review(review_id), 
+    FOREIGN KEY(user_id) REFERENCES review(user_id)
+);
+
+
+
+
+
