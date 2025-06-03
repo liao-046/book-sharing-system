@@ -65,8 +65,8 @@ CREATE TABLE bookshelf_record(
     book_id INT,
     add_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY(shelf_id, book_id),
-    FOREIGN KEY(silent_share_id) REFERENCES silent_share(silent_share_id) ON DELETE CASCADE,
-    FOREIGN KEY(user_id) REFERENCES user(user_id) ON DELETE CASCADE
+    FOREIGN KEY(shelf_id) REFERENCES book_shelf(shelf_id) ON DELETE CASCADE,
+    FOREIGN KEY(book_id) REFERENCES book(book_id) ON DELETE CASCADE
 );
 
 
