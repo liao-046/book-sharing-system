@@ -18,3 +18,24 @@ CREATE TABLE book(
     cover_url VARCHAR(255),
     description TEXT
 );
+
+CREATE TABLE book_self(
+    shelf_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50)
+);
+
+CREATE TABLE review(
+    review_id INT AUTO_INCREMENT PRIMARY KEY,
+    rating INT CHECK(rating BETWEEN 1 AND 5),
+    comment TEXT, 
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE slient_share(
+    silent_share_id INT AUTO_INCREMENT PRIMARY KEY,
+    message TEXT,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    unlock_condition VARCHAR(255),
+    is_open BOOLEAN DEFAULT FALSE,
+    open_time DATETIME
+);
