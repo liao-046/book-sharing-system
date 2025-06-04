@@ -13,12 +13,18 @@ if (empty($name) || empty($email) || empty($password)) {
     exit;
 }
 
+// ✅ Email 格式檢查
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    echo json_encode(['success' => false, 'message' => 'Email 格式不正確'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 // 檢查 email 是否已存在
 $stmt = $pdo->prepare("SELECT * FROM user WHERE email = ?");
 $stmt->execute([$email]);
 
 if ($stmt->rowCount() > 0) {
-    echo json_encode(['success' => false, 'message' => '此 Email 已被註冊']);
+    echo json_encode(['success' => false, 'message' => '此 Email 已被註冊'],JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -29,5 +35,5 @@ $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 $stmt = $pdo->prepare("INSERT INTO user (name, email, password) VALUES (?, ?, ?)");
 $stmt->execute([$name, $email, $hashedPassword]);
 
-echo json_encode(['success' => true, 'message' => '註冊成功']);
+echo json_encode(['success' => true, 'message' => '註冊成功'], JSON_UNESCAPED_UNICODE);
 ?>
