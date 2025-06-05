@@ -26,6 +26,12 @@ $stmt->execute([$email, $token, $expires]);
 $resetLink = "http://localhost/book-sharing-system/frontend/reset_password.php?token=$token";
 $subject = "重設密碼連結";
 $message = "請點選以下連結重設密碼：\n$resetLink";
-mail($email, $subject, $message);
+//暫時不用
+//mail($email, $subject, $message);
 
-echo json_encode(['success' => true, 'message' => '重設密碼連結已寄出'], JSON_UNESCAPED_UNICODE);
+echo json_encode([
+    'success' => true,
+    'message' => '重設密碼連結產生成功',
+    'link' => $resetLink, // 這裡印出 token 連結
+    'expires_at' => $expires // 新增 token 到期時間
+], JSON_UNESCAPED_UNICODE);

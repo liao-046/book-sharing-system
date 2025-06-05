@@ -19,10 +19,13 @@ CREATE TABLE book(
     description TEXT
 );
 
-CREATE TABLE book_shelf(
+CREATE TABLE book_shelf (
     shelf_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50)
+    name VARCHAR(50),
+    user_id INT,
+    FOREIGN KEY(user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
+
 
 CREATE TABLE review(
     review_id INT AUTO_INCREMENT PRIMARY KEY,
