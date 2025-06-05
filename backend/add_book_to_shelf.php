@@ -17,6 +17,14 @@ if (!$user_id || empty($shelf_id) || empty($book_id)) {
     echo json_encode(['success' => false, 'message' => '未登入或資料不完整']);
     exit;
 }
+//確認書是否存在
+
+$stmt = $pdo->prepare("SELECT * FROM book WHERE book_id = ?");
+$stmt->execute([$book_id]);
+if ($stmt->rowCount() === 0) {
+    echo json_encode(['success' => false, 'message' => '書籍不存在']);
+    exit;
+}
 
 // 確認書櫃是這位使用者的
 $stmt = $pdo->prepare("SELECT * FROM book_shelf WHERE shelf_id = ? AND user_id = ?");

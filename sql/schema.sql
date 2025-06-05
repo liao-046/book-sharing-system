@@ -18,9 +18,18 @@ CREATE TABLE book(
     cover_url VARCHAR(255),
     description TEXT
 );
+CREATE TABLE book (
+    book_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    publisher VARCHAR(100),
+    category VARCHAR(50),
+    cover_url VARCHAR(255),
+    description TEXT
+);
+
 CREATE TABLE author (
     author_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL
+    name VARCHAR(100) UNIQUE NOT NULL
 );
 
 -- 書籍與作者的關聯表

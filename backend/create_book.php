@@ -5,6 +5,23 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 header('Content-Type: application/json');
 
+
+// 驗證是否為管理者
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+$user_id = $_SESSION['user_id'] ?? null;
+if (!$user_id) {
+    echo json_encode(['success' => false, 'message' => '未登入']);
+    exit;
+}
+$stmt = $pdo->prepare("SELECT is_admin FROM user WHERE user_id = ?");
+$stmt->execute([$user_id]);
+$user = $stmt->fetch();
+if (!$user || !$user['is_admin']) {
+    echo json_encode(['success' => false, 'message' => '非管理者無權限']);
+    exit;
+}
 // ✅ 接收 JSON 格式資料
 $input = json_decode(file_get_contents('php://input'), true);
 
