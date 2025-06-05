@@ -18,6 +18,19 @@ CREATE TABLE book(
     cover_url VARCHAR(255),
     description TEXT
 );
+CREATE TABLE author (
+    author_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+-- 書籍與作者的關聯表
+CREATE TABLE book_author (
+    book_id INT,
+    author_id INT,
+    PRIMARY KEY (book_id, author_id),
+    FOREIGN KEY (book_id) REFERENCES book(book_id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES author(author_id) ON DELETE CASCADE
+);
 
 CREATE TABLE book_shelf (
     shelf_id INT AUTO_INCREMENT PRIMARY KEY,

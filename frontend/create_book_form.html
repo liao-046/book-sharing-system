@@ -1,0 +1,71 @@
+<!-- C:\xampp\htdocs\book-sharing-system\frontend\create_book_form.html -->
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>新增書籍</title>
+</head>
+<body>
+  <h2>新增書籍（支援多位作者）</h2>
+
+  <form id="bookForm">
+    <label>書名：<input type="text" name="title" required></label><br>
+    <label>出版社：<input type="text" name="publisher"></label><br>
+    <label>分類：<input type="text" name="category"></label><br>
+    <label>封面 URL：<input type="text" name="cover_url"></label><br>
+    <label>簡介：<textarea name="description"></textarea></label><br>
+
+    <div id="authors">
+      <label>作者 1：<input type="text" name="author" required></label>
+    </div>
+    <button type="button" onclick="addAuthor()">新增作者欄位</button><br><br>
+
+    <button type="submit">提交</button>
+  </form>
+
+  <script>
+    let authorCount = 1;
+
+    function addAuthor() {
+      authorCount++;
+      const div = document.createElement("div");
+      div.innerHTML = `作者 ${authorCount}：<input type="text" name="author">`;
+      document.getElementById("authors").appendChild(div);
+    }
+
+    document.getElementById("bookForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const formData = new FormData(form);
+      const authors = [];
+
+      form.querySelectorAll('input[name="author"]').forEach(input => {
+        const name = input.value.trim();
+        if (name) authors.push(name);
+      });
+
+      const data = {
+        title: formData.get("title"),
+        publisher: formData.get("publisher"),
+        category: formData.get("category"),
+        cover_url: formData.get("cover_url"),
+        description: formData.get("description"),
+        authors: authors
+      };
+
+      const response = await fetch("../backend/create_book.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "include", // 讓 cookie (PHPSESSID) 傳過去
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+      alert(result.message);
+    });
+  </script>
+</body>
+</html>
