@@ -1,18 +1,38 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>登入頁面</title>
+  <title>登入</title>
 </head>
 <body>
-  <h2>登入帳號</h2>
-  <form action="../backend/login.php" method="POST">
-    <label>Email：<input type="email" name="email" required></label><br><br>
-    <label>密碼：<input type="password" name="password" required></label><br><br>
+  <h2>管理員登入</h2>
+  <form id="loginForm">
+    <label>Email：<input type="email" name="email" required></label><br>
+    <label>密碼：<input type="password" name="password" required></label><br>
     <button type="submit">登入</button>
   </form>
 
-  <hr>
-  <p>還沒有帳號嗎？ <a href="register.html">點我註冊</a></p>
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+
+      fetch('../backend/login.php', {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert(data.message);
+          window.location.href = '../backend/admin_book_index.php';
+        } else {
+          alert(data.message);
+        }
+      })
+      .catch(err => alert('發生錯誤：' + err));
+    });
+  </script>
+  <p>還沒有帳號？<a href="register.html">註冊一個新帳號</a></p>
 </body>
 </html>

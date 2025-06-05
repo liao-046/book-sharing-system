@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import re
+import json  # ✅ 新增匯入
 
 def fetch_book_info(url):
     res = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -13,13 +14,12 @@ def fetch_book_info(url):
     cover_tag = soup.select_one('meta[property="og:image"]')
     cover_url = cover_tag['content'] if cover_tag else ''
 
-     # 書籍簡介（抓 <div class="content"> 中多行文字）
+    # 書籍簡介（抓 <div class="content"> 中多行文字）
     description = ''
     desc_div = soup.find('div', class_='content')
     if desc_div:
         lines = [line.strip() for line in desc_div.stripped_strings]
         description = '\n'.join(lines)
-
 
     # 從 <meta name="description"> 抓作者與出版社
     meta_desc = soup.find('meta', {'name': 'description'})
@@ -28,6 +28,8 @@ def fetch_book_info(url):
     # 用正則式抓作者與出版社
     author_match = re.search(r'作者：(.+?)，', meta_content)
     publisher_match = re.search(r'出版社：(.+?)，', meta_content)
+    category_match = re.search(r'類別：(.+?)(?:，|$)', meta_content)
+
 
     # 處理多作者
     authors = []
@@ -36,23 +38,21 @@ def fetch_book_info(url):
         authors = [a.strip() for a in re.split(r'[ ,，]', raw_authors) if a.strip()]
 
     publisher = publisher_match.group(1).strip() if publisher_match else ''
+    category = category_match.group(1).strip() if category_match else ''
 
     return {
         'title': title,
         'authors': authors,
         'publisher': publisher,
+        'category':category,
         'cover_url': cover_url,
         'description': description
     }
 
-
-# ✅ 測試爬取一筆書籍資訊
+# ✅ 測試爬取一筆書籍資訊，並輸出 JSON 格式
 if __name__ == '__main__':
-    test_url = 'https://www.books.com.tw/products/0010731549'  # ← 可換其他網址
+    test_url = 'https://www.books.com.tw/products/0011019533?loc=P_0152__1003'
     data = fetch_book_info(test_url)
 
-    print("📘 書名：", data['title'])
-    print("👤 作者：", ', '.join(data['authors']))
-    print("🏢 出版社：", data['publisher'])
-    print("🖼️ 封面圖：", data['cover_url'])
-    print("📝 簡介：\n", data['description'])
+    # 輸出為 JSON 格式（含中文）
+    print(json.dumps(data, ensure_ascii=False, indent=2))
