@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>權限檢查中...</title>
+</head>
+<body>
+  <p>正在檢查使用者身份，請稍候...</p>
+
+  <script>
+    // 自動檢查是否為管理員
+    fetch('../backend/check_admin.php')
+      .then(res => res.json())
+      .then(data => {
+        if (data.isAdmin) {
+          // 是管理員 → 進入管理頁
+          window.location.href = '../backend/admin_book_index.php';
+        } else {
+          // 非管理員或未登入 → 回首頁
+          window.location.href = 'index.html';
+        }
+      })
+      .catch(err => {
+        alert('發生錯誤，將返回首頁：' + err);
+        window.location.href = 'index.html';
+      });
+  </script>
+</body>
+</html>

@@ -2,37 +2,95 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>登入</title>
+  <title>登入系統</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f3f3f3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .login-container {
+      background-color: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      width: 300px;
+    }
+    .login-container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input[type="email"],
+    input[type="password"],
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+    }
+    .error {
+      color: red;
+      margin-top: 10px;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-  <h2>管理員登入</h2>
-  <form id="loginForm">
-    <label>Email：<input type="email" name="email" required></label><br>
-    <label>密碼：<input type="password" name="password" required></label><br>
-    <button type="submit">登入</button>
-  </form>
+  <div class="login-container">
+    <h2>使用者登入</h2>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="密碼" required>
+      <button type="submit">登入</button>
+      <div class="error" id="errorMsg"></div>
+    </form>
+  </div>
 
   <script>
-    document.getElementById('loginForm').addEventListener('submit', function (e) {
+    document.getElementById("loginForm").addEventListener("submit", function(e) {
       e.preventDefault();
-      const formData = new FormData(this);
 
-      fetch('../backend/login.php', {
-        method: 'POST',
-        body: formData
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      fetch("/book-sharing-system/backend/login.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
       })
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          alert(data.message);
-          window.location.href = '../backend/admin_book_index.php';
+          // 登入成功，接著檢查是否為 admin
+          fetch("/book-sharing-system/backend/check_admin.php")
+            .then(res => res.json())
+            .then(adminData => {
+              if (adminData.isAdmin) {
+                window.location.href = "/book-sharing-system/backend/admin_book_index.php";
+              } else {
+                window.location.href = "/book-sharing-system/index.php";
+              }
+            });
         } else {
-          alert(data.message);
+          document.getElementById("errorMsg").textContent = data.message || "登入失敗";
         }
       })
-      .catch(err => alert('發生錯誤：' + err));
+      .catch(err => {
+        console.error("伺服器錯誤：", err);
+        document.getElementById("errorMsg").textContent = "無法連線伺服器，請稍後再試。";
+      });
     });
   </script>
-  <p>還沒有帳號？<a href="register.html">註冊一個新帳號</a></p>
 </body>
 </html>
