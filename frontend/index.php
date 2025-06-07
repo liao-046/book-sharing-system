@@ -1,10 +1,7 @@
 <?php
 session_start();
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.html");
-    exit;
-}
-$user_name = htmlspecialchars($_SESSION['user_name']);
+$is_logged_in = isset($_SESSION['user_id']);
+$user_name = $is_logged_in ? htmlspecialchars($_SESSION['user_name']) : null;
 ?>
 
 <!DOCTYPE html>
@@ -16,7 +13,7 @@ $user_name = htmlspecialchars($_SESSION['user_name']);
     body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
     header { background: #333; color: white; padding: 10px 20px; }
     header h1 { display: inline; }
-    header span { float: right; }
+    header .actions { float: right; }
     .container { padding: 20px; }
     .category-block { margin-bottom: 40px; }
     .category-title { font-size: 1.5em; border-bottom: 2px solid #ccc; margin-bottom: 10px; }
@@ -31,19 +28,37 @@ $user_name = htmlspecialchars($_SESSION['user_name']);
 </head>
 <body>
 <header>
-  <h1>歡迎，<?= $user_name ?>！</h1>
-  <span style="float: right;">
-    <a href="/book-sharing-system/backend/logout.php" style="color:white; margin-right: 20px;">登出</a>
-    <button onclick="location.href='/book-sharing-system/frontend/bookshelf_list.html'" style="
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 5px;
-      cursor: pointer;
-    ">我的書櫃</button>
-  </span>
+  <h1>
+    <?php if ($is_logged_in): ?>
+      歡迎，<?= $user_name ?>！
+    <?php else: ?>
+      書櫃分享系統
+    <?php endif; ?>
+  </h1>
+  <div class="actions">
+    <?php if ($is_logged_in): ?>
+      <a href="/book-sharing-system/backend/logout.php" style="color:white; margin-right: 20px;">登出</a>
+      <button onclick="location.href='/book-sharing-system/frontend/bookshelf_list.html'" style="
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+      ">我的書櫃</button>
+    <?php else: ?>
+      <button onclick="location.href='/book-sharing-system/frontend/login.html'" style="
+        background-color: #2196F3;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+      ">登入</button>
+    <?php endif; ?>
+  </div>
 </header>
+
 <div class="container">
   <div class="search-sort">
     <input type="text" id="searchInput" placeholder="搜尋書名或作者" style="width: 60%; padding: 5px;">
@@ -58,6 +73,7 @@ $user_name = htmlspecialchars($_SESSION['user_name']);
 
 <script>
 let allBooks = {};
+const isLoggedIn = <?= $is_logged_in ? 'true' : 'false' ?>;
 
 function renderBooks(data) {
   const container = document.getElementById("bookContainer");
@@ -100,6 +116,12 @@ function renderBooks(data) {
 }
 
 function addToShelf(bookId) {
+  if (!isLoggedIn) {
+    alert("請先登入才能加入書架！");
+    window.location.href = "/book-sharing-system/frontend/login.html";
+    return;
+  }
+
   fetch("/book-sharing-system/backend/add_book_to_shelf.php", {
     method: "POST",
     headers: {'Content-Type': 'application/x-www-form-urlencoded'},

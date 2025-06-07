@@ -45,7 +45,7 @@ $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="container mt-4">
   <div class="d-flex justify-content-between mb-3">
     <h2>
-    <img src="/book-sharing-system/assets/img/12260_color.png" alt="icon" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;">
+    <img src="/book-sharing-system/assets/img/12260_color.png" alt="icon" style="width: 50px; height: 50px; vertical-align: middle; margin-right: 8px;">
   書籍表格管理
     </h2>
     <div>
