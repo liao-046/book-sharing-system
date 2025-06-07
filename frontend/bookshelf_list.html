@@ -15,17 +15,35 @@
     #shelfList {
       margin-bottom: 20px;
     }
+    .shelf-item {
+      display: flex;
+      align-items: center;
+      margin: 6px 0;
+    }
     .shelf-btn {
       padding: 10px 16px;
-      margin: 6px;
       border: 1px solid #ccc;
       background-color: #ffffff;
       cursor: pointer;
       border-radius: 6px;
       transition: background-color 0.3s;
+      flex-grow: 1;
+      text-align: left;
     }
     .shelf-btn:hover {
       background-color: #e0e0e0;
+    }
+    .delete-btn {
+      margin-left: 8px;
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+    .delete-btn:hover {
+      background-color: #c82333;
     }
     #newShelfForm {
       display: flex;
@@ -67,13 +85,42 @@
       }
 
       data.shelves.forEach(shelf => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "shelf-item";
+
         const btn = document.createElement("button");
         btn.className = "shelf-btn";
         btn.textContent = shelf.name;
         btn.onclick = () => {
           window.location.href = `book_shelf.html?shelf_id=${shelf.shelf_id}`;
         };
-        shelfList.appendChild(btn);
+
+        const del = document.createElement("button");
+        del.className = "delete-btn";
+        del.textContent = "❌";
+        del.onclick = async () => {
+          if (confirm(`確定要刪除「${shelf.name}」嗎？`)) {
+            const formData = new FormData();
+            formData.append("shelf_id", shelf.shelf_id);
+
+            const res = await fetch("../backend/delete_shelf.php", {
+              method: "POST",
+              credentials: "include",
+              body: formData
+            });
+
+            const result = await res.json();
+            if (result.success) {
+              loadShelves();
+            } else {
+              alert("刪除失敗：" + (result.message || "未知錯誤"));
+            }
+          }
+        };
+
+        wrapper.appendChild(btn);
+        wrapper.appendChild(del);
+        shelfList.appendChild(wrapper);
       });
     }
 
