@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>我的書櫃列表</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    h2 {
+      margin-bottom: 16px;
+    }
+    #shelfList {
+      margin-bottom: 20px;
+    }
+    .shelf-btn {
+      padding: 10px 16px;
+      margin: 6px;
+      border: 1px solid #ccc;
+      background-color: #ffffff;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background-color 0.3s;
+    }
+    .shelf-btn:hover {
+      background-color: #e0e0e0;
+    }
+    #newShelfForm {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+    }
+    input[type="text"] {
+      padding: 8px;
+      font-size: 1em;
+    }
+    button {
+      padding: 8px 16px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>我的書櫃</h2>
+
+  <div id="shelfList">載入中...</div>
+
+  <form id="newShelfForm">
+    <input type="text" id="newShelfName" placeholder="書櫃名稱" required />
+    <button type="submit">新增書櫃</button>
+  </form>
+
+  <script>
+    async function loadShelves() {
+      const res = await fetch("../backend/get_shelves.php", { credentials: "include" });
+      const data = await res.json();
+
+      const shelfList = document.getElementById("shelfList");
+      shelfList.innerHTML = "";
+
+      if (!data.success || !data.shelves || data.shelves.length === 0) {
+        shelfList.innerHTML = "<p>你尚未建立任何書櫃</p>";
+        return;
+      }
+
+      data.shelves.forEach(shelf => {
+        const btn = document.createElement("button");
+        btn.className = "shelf-btn";
+        btn.textContent = shelf.name;
+        btn.onclick = () => {
+          window.location.href = `book_shelf.html?shelf_id=${shelf.shelf_id}`;
+        };
+        shelfList.appendChild(btn);
+      });
+    }
+
+    document.getElementById("newShelfForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("newShelfName").value.trim();
+      if (!name) return;
+
+      const formData = new FormData();
+      formData.append("name", name);
+
+      const res = await fetch("../backend/create_shelf.php", {
+        method: "POST",
+        credentials: "include",
+        body: formData
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        document.getElementById("newShelfName").value = "";
+        loadShelves(); // 重新載入書櫃列表
+      } else {
+        alert("新增書櫃失敗：" + (result.message || "未知錯誤"));
+      }
+    });
+
+    window.onload = loadShelves;
+  </script>
+</body>
+</html>

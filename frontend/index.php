@@ -34,7 +34,7 @@ $user_name = htmlspecialchars($_SESSION['user_name']);
   <h1>歡迎，<?= $user_name ?>！</h1>
   <span style="float: right;">
     <a href="/book-sharing-system/backend/logout.php" style="color:white; margin-right: 20px;">登出</a>
-    <button onclick="location.href='/book-sharing-system/frontend/book_shelf.html'" style="
+    <button onclick="location.href='/book-sharing-system/frontend/bookshelf_list.html'" style="
       background-color: #4CAF50;
       color: white;
       border: none;
