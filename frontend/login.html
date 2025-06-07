@@ -42,6 +42,17 @@
       margin-top: 10px;
       text-align: center;
     }
+    .register-link {
+      text-align: center;
+      margin-top: 15px;
+    }
+    .register-link a {
+      color: #28a745;
+      text-decoration: none;
+    }
+    .register-link a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -53,6 +64,9 @@
       <button type="submit">登入</button>
       <div class="error" id="errorMsg"></div>
     </form>
+    <div class="register-link">
+      尚未註冊？<a href="/book-sharing-system/frontend/register.html">立即註冊</a>
+    </div>
   </div>
 
   <script>
@@ -72,14 +86,14 @@
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          // 登入成功，接著檢查是否為 admin
+          // 登入成功，檢查是否為 admin
           fetch("/book-sharing-system/backend/check_admin.php")
             .then(res => res.json())
             .then(adminData => {
               if (adminData.isAdmin) {
                 window.location.href = "/book-sharing-system/backend/admin_book_index.php";
               } else {
-                window.location.href = "/book-sharing-system/index.php";
+                window.location.href = "/book-sharing-system/frontend/index.php";
               }
             });
         } else {

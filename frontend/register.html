@@ -1,17 +1,110 @@
-<!-- 測試用 -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>註冊測試</title>
+  <title>註冊系統</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f3f3f3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .register-container {
+      background-color: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      width: 300px;
+    }
+    .register-container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+    }
+    .error {
+      color: red;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .login-link {
+      text-align: center;
+      margin-top: 15px;
+    }
+    .login-link a {
+      color: #007BFF;
+      text-decoration: none;
+    }
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-  <h2>註冊帳號</h2>
-  <form action="../backend/register.php" method="POST">
-    <label>姓名：<input type="text" name="name" required></label><br><br>
-    <label>Email：<input type="email" name="email" required></label><br><br>
-    <label>密碼：<input type="password" name="password" required></label><br><br>
-    <button type="submit">註冊</button>
-  </form>
+  <div class="register-container">
+    <h2>註冊帳號</h2>
+    <form id="registerForm">
+      <input type="text" id="name" placeholder="姓名" required>
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="密碼" required>
+      <button type="submit">註冊</button>
+      <div class="error" id="errorMsg"></div>
+    </form>
+    <div class="login-link">
+      已有帳戶？<a href="/book-sharing-system/frontend/login.html">立即登入</a>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("registerForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      fetch("/book-sharing-system/backend/register.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: `name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert("註冊成功，請登入！");
+          window.location.href = "/book-sharing-system/frontend/login.html";
+        } else {
+          if (data.message === "此 Email 已被註冊") {
+            alert("此 Email 已被註冊，請直接登入");
+            window.location.href = "/book-sharing-system/frontend/login.html";
+          } else {
+            document.getElementById("errorMsg").textContent = data.message || "註冊失敗";
+          }
+        }
+      })
+      .catch(err => {
+        console.error("伺服器錯誤：", err);
+        document.getElementById("errorMsg").textContent = "無法連線伺服器，請稍後再試。";
+      });
+    });
+  </script>
 </body>
 </html>
