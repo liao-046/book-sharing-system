@@ -50,18 +50,40 @@ $user_name = $is_logged_in ? htmlspecialchars($_SESSION['user_name']) : null;
     .search-sort {
       display: flex;
       justify-content: space-between;
-      margin-top: 20px;  /* 新增這行讓它與 header 有距離 */
+      margin-top: 20px;
       margin-bottom: 20px;
     }
     .search-sort input[type="text"],
     .search-sort select {
-      font-size: 1.1em;     /* 放大搜尋框與下拉選單 */
-      padding: 8px 12px;    /* 增加 padding */
+      font-size: 1.1em;
+      padding: 8px 12px;
     }
     .book-card img {
       width: 100%;
-      height: 200px;         /* 原本是 240px，現在縮小一點點 */
+      height: 200px;
       object-fit: cover;
+    }
+
+    /* 新增書櫃選擇視窗樣式 */
+    #shelfSelectorModal {
+      display: none;
+      position: fixed;
+      top: 30%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      border-radius: 8px;
+      z-index: 999;
+    }
+    #modalBackdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4);
+      z-index: 998;
     }
   </style>
 </head>
@@ -86,10 +108,10 @@ $user_name = $is_logged_in ? htmlspecialchars($_SESSION['user_name']) : null;
 <div class="container">
   <div class="search-sort">
     <div style="display: flex; gap: 10px; width: 65%;">
-    <input type="text" id="searchInput" placeholder="搜尋書名或作者" style="flex: 1; padding: 8px 12px; font-size: 1.1em;">
-    <button onclick="renderBooks(allBooks)" style="padding: 8px 16px; font-size: 1.1em; cursor: pointer;">搜尋</button>
-  </div>
-    <select id="sortSelect" style="padding: 5px;">
+      <input type="text" id="searchInput" placeholder="搜尋書名或作者" style="flex: 1;">
+      <button onclick="renderBooks(allBooks)">搜尋</button>
+    </div>
+    <select id="sortSelect">
       <option value="new">最新上架</option>
       <option value="rating">評分高到低</option>
     </select>
@@ -98,9 +120,20 @@ $user_name = $is_logged_in ? htmlspecialchars($_SESSION['user_name']) : null;
   <div id="bookContainer"></div>
 </div>
 
+<!-- 書櫃選擇彈窗 -->
+<div id="shelfSelectorModal">
+  <h3>選擇書櫃</h3>
+  <select id="shelfSelect" style="width:100%; padding:8px;"></select>
+  <br><br>
+  <button onclick="confirmAddToShelf()">確定</button>
+  <button onclick="closeShelfSelector()">取消</button>
+</div>
+<div id="modalBackdrop" onclick="closeShelfSelector()"></div>
+
 <script>
 let allBooks = {};
 const isLoggedIn = <?= $is_logged_in ? 'true' : 'false' ?>;
+let selectedBookId = null;
 
 function renderBooks(data) {
   const container = document.getElementById("bookContainer");
@@ -133,7 +166,7 @@ function renderBooks(data) {
         <h3>${book.title}</h3>
         <p>作者：${book.authors}</p>
         <p>評分：${parseFloat(book.avg_rating).toFixed(1)}</p>
-        <button onclick="addToShelf(${book.book_id})">加入書架</button>
+        <button onclick="openShelfSelector(${book.book_id})">加入書架</button>
       `;
       grid.appendChild(card);
     });
@@ -142,21 +175,59 @@ function renderBooks(data) {
   });
 }
 
-function addToShelf(bookId) {
+function openShelfSelector(bookId) {
   if (!isLoggedIn) {
     alert("請先登入才能加入書架！");
     window.location.href = "/book-sharing-system/frontend/login.html";
     return;
   }
+  selectedBookId = bookId;
+
+  fetch("/book-sharing-system/backend/get_shelves.php")
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && data.shelves.length > 0) {
+        const select = document.getElementById("shelfSelect");
+        select.innerHTML = "";
+        data.shelves.forEach(shelf => {
+          const option = document.createElement("option");
+          option.value = shelf.shelf_id;
+          option.textContent = shelf.name;
+          select.appendChild(option);
+        });
+        document.getElementById("shelfSelectorModal").style.display = "block";
+        document.getElementById("modalBackdrop").style.display = "block";
+      } else {
+        alert("尚未建立任何書櫃，請先前往建立書櫃！");
+      }
+    })
+    .catch(() => alert("無法取得書櫃列表"));
+}
+
+function closeShelfSelector() {
+  document.getElementById("shelfSelectorModal").style.display = "none";
+  document.getElementById("modalBackdrop").style.display = "none";
+  selectedBookId = null;
+}
+
+function confirmAddToShelf() {
+  const shelfId = document.getElementById("shelfSelect").value;
+  if (!shelfId || !selectedBookId) return;
 
   fetch("/book-sharing-system/backend/add_book_to_shelf.php", {
     method: "POST",
-    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    body: `book_id=${bookId}`
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `book_id=${selectedBookId}&shelf_id=${shelfId}`
   })
-  .then(res => res.json())
-  .then(data => alert(data.message || '已加入書架'))
-  .catch(err => alert('加入失敗'));
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message || "已加入書櫃！");
+      closeShelfSelector();
+    })
+    .catch(() => {
+      alert("加入書櫃失敗！");
+      closeShelfSelector();
+    });
 }
 
 document.getElementById("searchInput").addEventListener("input", () => renderBooks(allBooks));
