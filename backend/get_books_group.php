@@ -13,9 +13,9 @@ $stmt = $pdo->query("
     FROM book b
     LEFT JOIN book_author ba ON b.book_id = ba.book_id
     LEFT JOIN author a ON ba.author_id = a.author_id
-    LEFT JOIN review r ON b.book_id = r.book_id  -- ✅ 改為 review
+    LEFT JOIN review r ON b.book_id = r.book_id
     GROUP BY b.book_id
-    ORDER BY b.created_at DESC
+    ORDER BY b.book_id DESC
 ");
 
 $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
