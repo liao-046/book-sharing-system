@@ -12,18 +12,57 @@ $user_name = $is_logged_in ? htmlspecialchars($_SESSION['user_name']) : null;
   <style>
     body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
     header { background: #333; color: white; padding: 10px 20px; }
-    header h1 { display: inline; }
-    header .actions { float: right; }
-    .container { padding: 20px; }
-    .category-block { margin-bottom: 40px; }
-    .category-title { font-size: 1.5em; border-bottom: 2px solid #ccc; margin-bottom: 10px; }
-    .book-grid { display: flex; flex-wrap: wrap; gap: 15px; }
-    .book-card { background: white; border: 1px solid #ddd; border-radius: 8px; width: 180px; padding: 10px; box-shadow: 1px 1px 5px rgba(0,0,0,0.1); }
-    .book-card img { width: 100%; height: 240px; object-fit: cover; }
-    .book-card h3 { font-size: 1em; margin: 5px 0; }
-    .book-card p { font-size: 0.9em; margin: 2px 0; }
-    .book-card button { margin-top: 5px; width: 100%; }
-    .search-sort { display: flex; justify-content: space-between; margin-bottom: 20px; }
+    header h1 { display: inline; font-size: 1.8em; }
+    header .actions {
+      float: right;
+      font-size: 1.2em;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    header .actions a,
+    header .actions button {
+      color: white;
+      font-size: 1.1em;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      background-color: transparent;
+      transition: background-color 0.3s ease;
+    }
+    header .actions a:hover,
+    header .actions button:hover {
+      background-color: #555;
+    }
+    header .actions button.login-btn {
+      background-color: #2196F3;
+    }
+    header .actions button.logout-btn {
+      background-color: #f44336;
+    }
+    header .actions button.bookshelf-btn {
+      background-color: #4CAF50;
+    }
+    .search-sort {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;  /* 新增這行讓它與 header 有距離 */
+      margin-bottom: 20px;
+    }
+    .search-sort input[type="text"],
+    .search-sort select {
+      font-size: 1.1em;     /* 放大搜尋框與下拉選單 */
+      padding: 8px 12px;    /* 增加 padding */
+    }
+    .book-card img {
+      width: 100%;
+      height: 200px;         /* 原本是 240px，現在縮小一點點 */
+      object-fit: cover;
+    }
   </style>
 </head>
 <body>
@@ -36,32 +75,20 @@ $user_name = $is_logged_in ? htmlspecialchars($_SESSION['user_name']) : null;
     <?php endif; ?>
   </h1>
   <div class="actions">
+    <button class="login-btn" onclick="location.href='/book-sharing-system/frontend/login.html'">登入</button>
     <?php if ($is_logged_in): ?>
-      <a href="/book-sharing-system/backend/logout.php" style="color:white; margin-right: 20px;">登出</a>
-      <button onclick="location.href='/book-sharing-system/frontend/bookshelf_list.html'" style="
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        border-radius: 5px;
-        cursor: pointer;
-      ">我的書櫃</button>
-    <?php else: ?>
-      <button onclick="location.href='/book-sharing-system/frontend/login.html'" style="
-        background-color: #2196F3;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        border-radius: 5px;
-        cursor: pointer;
-      ">登入</button>
+      <button class="logout-btn" onclick="location.href='/book-sharing-system/backend/logout.php'">登出</button>
+      <button class="bookshelf-btn" onclick="location.href='/book-sharing-system/frontend/bookshelf_list.html'">我的書櫃</button>
     <?php endif; ?>
   </div>
 </header>
 
 <div class="container">
   <div class="search-sort">
-    <input type="text" id="searchInput" placeholder="搜尋書名或作者" style="width: 60%; padding: 5px;">
+    <div style="display: flex; gap: 10px; width: 65%;">
+    <input type="text" id="searchInput" placeholder="搜尋書名或作者" style="flex: 1; padding: 8px 12px; font-size: 1.1em;">
+    <button onclick="renderBooks(allBooks)" style="padding: 8px 16px; font-size: 1.1em; cursor: pointer;">搜尋</button>
+  </div>
     <select id="sortSelect" style="padding: 5px;">
       <option value="new">最新上架</option>
       <option value="rating">評分高到低</option>
