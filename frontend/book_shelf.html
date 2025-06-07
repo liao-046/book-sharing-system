@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>書櫃</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      background: #f9f9f9;
+    }
+    #bookList {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+    }
+    .book-card {
+      border: 1px solid #ccc;
+      padding: 8px;
+      border-radius: 6px;
+      text-align: center;
+      background: #fff;
+      cursor: pointer;
+      transition: box-shadow 0.3s;
+    }
+    .book-card:hover {
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .book-card img {
+      max-width: 100%;
+      height: 240px;
+      object-fit: contain;
+      margin-bottom: 8px;
+    }
+    .book-title {
+      font-weight: bold;
+      margin: 8px 0 4px;
+      font-size: 1em;
+    }
+    .book-authors {
+      font-size: 0.9em;
+      color: #555;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h2>我的書櫃</h2>
+
+  <div id="bookList"></div>
+
+  <script>
+    async function loadBooks() {
+      // 先取得使用者的書櫃清單
+      const resShelf = await fetch("../backend/get_shelves.php", { credentials: "include" });
+      const shelfData = await resShelf.json();
+
+      if (!shelfData.success) {
+        alert("找不到書櫃");
+        return;
+      }
+
+      // 讀取第一個書櫃 id
+      const shelfId = shelfData.shelves[0]?.shelf_id;
+
+      if (!shelfId) {
+        alert("使用者尚未有書櫃");
+        return;
+      }
+
+      // 用書櫃 id 取得該書櫃裡的書
+      const res = await fetch(`../backend/get_shelf_books.php?shelf_id=${shelfId}`, { credentials: "include" });
+      const data = await res.json();
+
+      if (!data.success) {
+        alert("讀取書櫃失敗");
+        return;
+      }
+
+      renderBooks(data.books);
+    }
+
+    function renderBooks(books) {
+      const container = document.getElementById("bookList");
+      container.innerHTML = "";
+
+      if (books.length === 0) {
+        container.innerHTML = "<p>你的書櫃目前沒有書籍，快去加入一些吧！</p>";
+        return;
+      }
+
+      books.forEach(book => {
+        const card = document.createElement("div");
+        card.className = "book-card";
+        card.title = `作者：${book.authors}\n出版社：${book.publisher || "未知"}`;
+
+        card.innerHTML = `
+          <img src="${book.cover_url || 'https://via.placeholder.com/150'}" alt="封面" />
+          <div class="book-title">${book.title}</div>
+          <div class="book-authors">${book.authors}</div>
+        `;
+
+        card.addEventListener("click", () => {
+          // 點擊書卡跳轉到書籍詳細頁（可改成真實路徑）
+          window.location.href = `book_detail.html?book_id=${book.book_id}`;
+        });
+
+        container.appendChild(card);
+      });
+    }
+
+    window.onload = loadBooks;
+  </script>
+</body>
+</html>

@@ -32,7 +32,17 @@ $user_name = htmlspecialchars($_SESSION['user_name']);
 <body>
 <header>
   <h1>歡迎，<?= $user_name ?>！</h1>
-  <span><a href="/book-sharing-system/backend/logout.php" style="color:white;">登出</a></span>
+  <span style="float: right;">
+    <a href="/book-sharing-system/backend/logout.php" style="color:white; margin-right: 20px;">登出</a>
+    <button onclick="location.href='/book-sharing-system/frontend/book_shelf.html'" style="
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    ">我的書櫃</button>
+  </span>
 </header>
 <div class="container">
   <div class="search-sort">
