@@ -1,14 +1,18 @@
+<?php
+session_start();
+$is_logged_in = isset($_SESSION['user_id']);
+$user_name = $is_logged_in ? htmlspecialchars($_SESSION['user_name']) : null;
+?>
 <header class="navbar">
   <style>
     .navbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 14px 28px;
-      background:rgb(224, 224, 224);
-      color: #111827;
-      font-family: 'Segoe UI', sans-serif;
-      border-bottom: 1px solid #e5e7eb;
+      padding: 12px 24px;
+      background-color: #1f2937;
+      color: white;
+      font-family: "Noto Sans TC", sans-serif;
       position: sticky;
       top: 0;
       z-index: 1000;
@@ -16,7 +20,7 @@
 
     .logo {
       font-size: 1.5em;
-      font-weight: 600;
+      font-weight: bold;
     }
 
     .nav-group {
@@ -30,47 +34,38 @@
     }
 
     .dropbtn {
-      background:rgb(255, 255, 255);
-      color: #111827;
-      padding: 8px 14px;
-      border: 1px solid #d1d5db;
-      border-radius: 999px;
+      background-color: #374151;
+      color: white;
+      padding: 10px 14px;
       font-size: 0.95em;
+      border: none;
+      border-radius: 6px;
       cursor: pointer;
-      transition: background 0.2s, border-color 0.2s;
-    }
-
-    .dropbtn:hover {
-      background: #f3f4f6;
-      border-color: #9ca3af;
     }
 
     .dropdown-content {
       display: none;
       position: absolute;
+      top: 120%;
       right: 0;
-      top: 110%;
-      background: #ffffff;
-      min-width: 180px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      overflow: hidden;
-      animation: fadeIn 0.2s ease-in-out;
-      z-index: 999;
-      border: 1px solid #e5e7eb;
+      background-color: white;
+      color: #1f2937;
+      min-width: 160px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      border-radius: 6px;
+      z-index: 10;
     }
 
     .dropdown-content a {
-      display: block;
-      padding: 10px 16px;
-      color: #111827;
+      color: #1f2937;
+      padding: 12px 16px;
       text-decoration: none;
-      font-size: 0.95em;
-      transition: background 0.2s;
+      display: block;
     }
 
     .dropdown-content a:hover {
-      background: #f9fafb;
+      background-color: #f3f4f6;
+      color: #2563eb;
     }
 
     .dropdown.active .dropdown-content {
@@ -78,78 +73,67 @@
     }
 
     .login-btn, .signup-btn {
-      padding: 8px 16px;
-      border-radius: 999px;
+      background-color: #2563eb;
+      color: white;
+      padding: 8px 14px;
       text-decoration: none;
-      font-weight: 500;
-      font-size: 0.95em;
-      transition: background 0.3s, color 0.3s;
-      border: 1px solid #d1d5db;
-    }
-
-    .login-btn {
-      background:rgb(255, 255, 255);
-      color: #111827;
+      border-radius: 6px;
     }
 
     .signup-btn {
-      background:rgb(207, 180, 2);
-      color: #ffffff;
+      background-color: #10b981;
     }
 
-    .login-btn:hover {
-      background: #f3f4f6;
-    }
-
-    .signup-btn:hover {
-      background:rgb(241, 147, 147);
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .login-btn:hover, .signup-btn:hover {
+      opacity: 0.9;
     }
   </style>
 
   <div class="logo">書櫃分享系統</div>
-
   <div class="nav-group">
+    <!-- ☰ 功能選單 -->
     <div class="dropdown">
-      <button class="dropbtn">☰ 功能選單</button>
+      <button class="dropbtn">☰ 功能</button>
       <div class="dropdown-content">
-        <a href="/book-sharing-system/frontend/index.php">🏠 首頁</a>
-        <a href="/book-sharing-system/frontend/book_list.php">📘 書籍清單</a>
-        <a href="/book-sharing-system/frontend/create_book_form.php">➕ 新增書籍</a>
+        <a href="/book-sharing-system/frontend/index.php">首頁</a>
+        <a href="/book-sharing-system/frontend/book_list.php">書籍清單</a>
+        <a href="/book-sharing-system/frontend/create_book_form.php">新增書籍</a>
       </div>
     </div>
 
+    <!-- 登入 / 註冊 OR 使用者選單 -->
     <?php if ($is_logged_in): ?>
       <div class="dropdown">
         <button class="dropbtn">👤 <?= $user_name ?> ▾</button>
         <div class="dropdown-content">
-          <a href="/book-sharing-system/frontend/bookshelf_list.html">📚 我的書櫃</a>
-          <a href="/book-sharing-system/backend/logout.php">🚪 登出</a>
+          <div style="padding: 10px 16px; font-weight: bold;"> <?= $user_name ?></div>
+          <a href="/book-sharing-system/frontend/bookshelf_list.html">我的書櫃</a>
+          <a href="/book-sharing-system/backend/logout.php">登出</a>
         </div>
       </div>
     <?php else: ?>
       <a href="/book-sharing-system/frontend/login.html" class="login-btn">登入</a>
-      <a href="/book-sharing-system/frontend/register.html" class="signup-btn">註冊</a>
+      <a href="/book-sharing-system/frontend/signup.html" class="signup-btn">註冊</a>
     <?php endif; ?>
   </div>
 </header>
 
+<!-- JS for click dropdown -->
 <script>
   document.querySelectorAll('.dropdown .dropbtn').forEach(button => {
     button.addEventListener('click', function (e) {
       e.stopPropagation();
       const dropdown = this.closest('.dropdown');
       dropdown.classList.toggle('active');
+
+      // 關閉其他選單
       document.querySelectorAll('.dropdown').forEach(d => {
         if (d !== dropdown) d.classList.remove('active');
       });
     });
   });
 
+  // 點空白處關閉所有 dropdown
   document.addEventListener('click', () => {
     document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
   });
