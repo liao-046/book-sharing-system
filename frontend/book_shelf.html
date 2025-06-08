@@ -1,115 +1,94 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>書櫃</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body {
-      font-family: sans-serif;
-      margin: 20px;
-      background: #f9f9f9;
-    }
-    #bookList {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 16px;
-    }
-    .book-card {
-      border: 1px solid #ccc;
-      padding: 8px;
-      border-radius: 6px;
-      text-align: center;
-      background: #fff;
-      cursor: pointer;
-      transition: box-shadow 0.3s;
-    }
-    .book-card:hover {
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-    .book-card img {
-      max-width: 100%;
-      height: 240px;
-      object-fit: contain;
-      margin-bottom: 8px;
-    }
-    .book-title {
-      font-weight: bold;
-      margin: 8px 0 4px;
-      font-size: 1em;
-    }
-    .book-authors {
-      font-size: 0.9em;
-      color: #555;
-      margin-bottom: 4px;
-    }
+    body { background: #f5f5f5; }
+    .card-img-top { height: 200px; object-fit: cover; }
   </style>
 </head>
 <body>
-  <h2>我的書櫃</h2>
+<div class="container mt-4">
+  <h3>
+    <span id="shelfIcon">📁</span>
+    <span id="shelfName">我的書櫃</span>
+  </h3>
 
-  <div id="bookList"></div>
+  <div id="emptyMessage" class="alert alert-info text-center mt-4" style="display: none;">
+    📭 目前書櫃是空的
+    <button class="btn btn-primary btn-sm ms-2" onclick="window.location.href='/book-sharing-system/frontend/index.html'">
+      ➕ 加入書籍
+    </button>
+  </div>
 
-  <script>
-    async function loadBooks() {
-      // 先取得使用者的書櫃清單
-      const resShelf = await fetch("../backend/get_shelves.php", { credentials: "include" });
-      const shelfData = await resShelf.json();
+  <div id="bookList" class="row mt-3"></div>
+</div>
 
-      if (!shelfData.success) {
-        alert("找不到書櫃");
-        return;
-      }
+<script>
+const shelfId = new URLSearchParams(location.search).get('shelf_id');
+if (!shelfId) {
+  alert('缺少 shelf_id');
+  location.href = 'index.html';
+}
 
-      // 讀取第一個書櫃 id
-      const shelfId = shelfData.shelves[0]?.shelf_id;
-
-      if (!shelfId) {
-        alert("使用者尚未有書櫃");
-        return;
-      }
-
-      // 用書櫃 id 取得該書櫃裡的書
-      const res = await fetch(`../backend/get_shelf_books.php?shelf_id=${shelfId}`, { credentials: "include" });
-      const data = await res.json();
-
-      if (!data.success) {
-        alert("讀取書櫃失敗");
-        return;
-      }
-
-      renderBooks(data.books);
+fetch(`/book-sharing-system/backend/get_shelf_books.php?shelf_id=${shelfId}`)
+  .then(res => res.json())
+  .then(data => {
+    if (!data.success) {
+      alert(data.message);
+      return;
     }
 
-    function renderBooks(books) {
-      const container = document.getElementById("bookList");
-      container.innerHTML = "";
+    const bookList = document.getElementById('bookList');
+    const emptyMessage = document.getElementById('emptyMessage');
+    const shelfName = document.getElementById('shelfName');
 
-      if (books.length === 0) {
-        container.innerHTML = "<p>你的書櫃目前沒有書籍，快去加入一些吧！</p>";
-        return;
-      }
-
-      books.forEach(book => {
-        const card = document.createElement("div");
-        card.className = "book-card";
-        card.title = `作者：${book.authors}\n出版社：${book.publisher || "未知"}`;
-
-        card.innerHTML = `
-          <img src="${book.cover_url || 'https://via.placeholder.com/150'}" alt="封面" />
-          <div class="book-title">${book.title}</div>
-          <div class="book-authors">${book.authors}</div>
-        `;
-
-        card.addEventListener("click", () => {
-          // 點擊書卡跳轉到書籍詳細頁（可改成真實路徑）
-          window.location.href = `book_detail.html?book_id=${book.book_id}`;
-        });
-
-        container.appendChild(card);
-      });
+    if (data.shelf_name) {
+      shelfName.textContent = data.shelf_name;
     }
 
-    window.onload = loadBooks;
-  </script>
+    if (data.books.length === 0) {
+      emptyMessage.style.display = 'block';
+      return;
+    }
+
+    emptyMessage.style.display = 'none';
+
+    data.books.forEach(book => {
+      const card = document.createElement('div');
+      card.className = 'col-md-4 mb-3';
+      card.innerHTML = `
+        <div class="card h-100">
+          <img src="${book.cover_url || '/default_cover.jpg'}" class="card-img-top">
+          <div class="card-body">
+            <h5 class="card-title">${book.title}</h5>
+            <p class="card-text">${book.authors}</p>
+            <button class="btn btn-outline-danger btn-sm" onclick="removeFromShelf(${book.book_id})">🗑️ 從書櫃移除</button>
+          </div>
+        </div>`;
+      bookList.appendChild(card);
+    });
+  })
+  .catch(() => alert('無法載入書櫃資料'));
+
+function removeFromShelf(bookId) {
+  if (!confirm('確定要從書櫃中移除此書籍？')) return;
+  fetch(`/book-sharing-system/backend/remove_from_shelf.php`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ book_id: bookId, shelf_id: shelfId })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();
+      } else {
+        alert('移除失敗：' + data.message);
+      }
+    });
+}
+</script>
 </body>
 </html>

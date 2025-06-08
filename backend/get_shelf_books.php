@@ -5,7 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 header('Content-Type: application/json');
 
-// 取得登入者 ID
+// 取得登入者 ID 和 shelf_id
 $user_id = $_SESSION['user_id'] ?? null;
 $shelf_id = $_GET['shelf_id'] ?? null;
 
@@ -15,11 +15,12 @@ if (!$user_id || !$shelf_id) {
     exit;
 }
 
-// 確認書櫃屬於使用者
-$stmt = $pdo->prepare("SELECT * FROM book_shelf WHERE shelf_id = ? AND user_id = ?");
+// 確認書櫃屬於使用者並取得名稱
+$stmt = $pdo->prepare("SELECT name FROM book_shelf WHERE shelf_id = ? AND user_id = ?");
 $stmt->execute([$shelf_id, $user_id]);
+$shelf = $stmt->fetch();
 
-if ($stmt->rowCount() === 0) {
+if (!$shelf) {
     echo json_encode(['success' => false, 'message' => '書櫃不存在或無權限']);
     exit;
 }
@@ -41,4 +42,10 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$shelf_id]);
 $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
-echo json_encode(['success' => true, 'books' => $books]);
+
+// 回傳 JSON
+echo json_encode([
+    'success' => true,
+    'shelf_name' => $shelf['name'],
+    'books' => $books
+]);
