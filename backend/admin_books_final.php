@@ -2,11 +2,13 @@
 require_once 'db.php';
 session_start();
 
+// ✅ 登入與權限檢查
 $user_id = $_SESSION['user_id'] ?? null;
 if (!$user_id) {
     header("Location: login.html");
     exit;
 }
+
 $stmt = $pdo->prepare("SELECT is_admin, name FROM user WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $user = $stmt->fetch();
@@ -16,6 +18,7 @@ if (!$user || !$user['is_admin']) {
 }
 $user_name = htmlspecialchars($user['name']);
 
+// ✅ 取得所有書籍資料
 $stmt = $pdo->query("
     SELECT b.book_id, b.title, b.publisher, b.category, b.cover_url, b.description,
            GROUP_CONCAT(a.name SEPARATOR ', ') AS authors
@@ -27,7 +30,6 @@ $stmt = $pdo->query("
 ");
 $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -45,8 +47,8 @@ $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="container mt-4">
   <div class="d-flex justify-content-between mb-3">
     <h2>
-    <img src="/book-sharing-system/assets/img/12260_color.png" alt="icon" style="width: 50px; height: 50px; vertical-align: middle; margin-right: 8px;">
-  書籍表格管理
+      <img src="/book-sharing-system/assets/img/12260_color.png" alt="icon" style="width: 50px; height: 50px; vertical-align: middle; margin-right: 8px;">
+      書籍表格管理
     </h2>
     <div>
       歡迎，<?= $user_name ?>　
@@ -54,9 +56,9 @@ $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
   </div>
 
-  <form method="POST" action="delete_books.php" id="deleteForm">
+  <form id="deleteForm">
     <div class="mb-2">
-      <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('確定刪除選取的書籍嗎？')">🗑️ 刪除選取</button>
+      <button type="submit" class="btn btn-danger btn-sm">🗑️ 刪除選取</button>
     </div>
     <table class="table table-bordered bg-white">
       <thead class="table-light">
@@ -123,8 +125,7 @@ function showDetail(bookId) {
   document.getElementById("canvasCategory").textContent = book.category || placeholder;
   document.getElementById("canvasDescription").textContent = book.description || placeholder;
 
-  const offcanvas = new bootstrap.Offcanvas('#detailCanvas');
-  offcanvas.show();
+  new bootstrap.Offcanvas('#detailCanvas').show();
 }
 
 function makeEditable(cell, field, bookId) {
@@ -205,6 +206,41 @@ function makeEditableSpan(span) {
     });
   });
 }
+
+// ✅ AJAX 批次刪除
+document.getElementById('deleteForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  const checkboxes = document.querySelectorAll('input[name="delete_ids[]"]:checked');
+  const ids = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+  if (ids.length === 0) {
+    alert("請先選取要刪除的書籍");
+    return;
+  }
+
+  if (!confirm(`確定要刪除 ${ids.length} 本書嗎？`)) return;
+
+  fetch('delete_books.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ book_ids: ids })
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.success) {
+      ids.forEach(id => {
+        const row = document.querySelector(`tr[data-id="${id}"]`);
+        if (row) row.remove();
+      });
+      alert("刪除成功");
+    } else {
+      alert("刪除失敗：" + res.message);
+    }
+  })
+  .catch(() => {
+    alert("伺服器錯誤");
+  });
+});
 </script>
 </body>
 </html>
