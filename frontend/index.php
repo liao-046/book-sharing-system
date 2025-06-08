@@ -1,248 +1,83 @@
 <?php
 session_start();
-$is_logged_in = isset($_SESSION['user_id']);
-$user_name = $is_logged_in ? htmlspecialchars($_SESSION['user_name']) : null;
-?>
+require_once '../backend/db.php';
 
+// 取得目前登入者資訊
+$user_id = $_SESSION['user_id'] ?? null;
+$user_name = $_SESSION['user_name'] ?? null;
+
+// 撈取書籍與作者
+$stmt = $pdo->query("
+    SELECT b.book_id, b.title, b.publisher, b.category, b.cover_url,
+           GROUP_CONCAT(a.name SEPARATOR ', ') AS authors
+    FROM book b
+    LEFT JOIN book_author ba ON b.book_id = ba.book_id
+    LEFT JOIN author a ON ba.author_id = a.author_id
+    GROUP BY b.book_id
+    ORDER BY b.book_id DESC
+");
+$books = $stmt->fetchAll(PDO::FETCH_ASSOC);
+?>
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>首頁 - 書櫃分享系統</title>
+  <title>書籍瀏覽</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
-    header { background: #333; color: white; padding: 10px 20px; }
-    header h1 { display: inline; font-size: 1.8em; }
-    header .actions {
-      float: right;
-      font-size: 1.2em;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-    header .actions a,
-    header .actions button {
-      color: white;
-      font-size: 1.1em;
-      font-weight: 600;
-      padding: 8px 14px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      text-decoration: none;
-      background-color: transparent;
-      transition: background-color 0.3s ease;
-    }
-    header .actions a:hover,
-    header .actions button:hover {
-      background-color: #555;
-    }
-    header .actions button.login-btn {
-      background-color: #2196F3;
-    }
-    header .actions button.logout-btn {
-      background-color: #f44336;
-    }
-    header .actions button.bookshelf-btn {
-      background-color: #4CAF50;
-    }
-    .search-sort {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 20px;
+    body { background-color: #f8f9fa; }
+    .book-card {
+      width: 200px;
       margin-bottom: 20px;
+      transition: transform 0.2s;
     }
-    .search-sort input[type="text"],
-    .search-sort select {
-      font-size: 1.1em;
-      padding: 8px 12px;
+    .book-card:hover {
+      transform: scale(1.03);
     }
-    .book-card img {
+    .book-cover {
       width: 100%;
-      height: 200px;
+      height: 280px;
       object-fit: cover;
-    }
-
-    /* 新增書櫃選擇視窗樣式 */
-    #shelfSelectorModal {
-      display: none;
-      position: fixed;
-      top: 30%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #fff;
-      padding: 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      border-radius: 8px;
-      z-index: 999;
-    }
-    #modalBackdrop {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.4);
-      z-index: 998;
+      border-bottom: 1px solid #ddd;
     }
   </style>
 </head>
 <body>
-<header>
-  <h1>
-    <?php if ($is_logged_in): ?>
-      歡迎，<?= $user_name ?>！
-    <?php else: ?>
-      書櫃分享系統
-    <?php endif; ?>
-  </h1>
-  <div class="actions">
-    <button class="login-btn" onclick="location.href='/book-sharing-system/frontend/login.html'">登入</button>
-    <?php if ($is_logged_in): ?>
-      <button class="logout-btn" onclick="location.href='/book-sharing-system/backend/logout.php'">登出</button>
-      <button class="bookshelf-btn" onclick="location.href='/book-sharing-system/frontend/bookshelf_list.html'">我的書櫃</button>
-    <?php endif; ?>
-  </div>
-</header>
-
-<div class="container">
-  <div class="search-sort">
-    <div style="display: flex; gap: 10px; width: 65%;">
-      <input type="text" id="searchInput" placeholder="搜尋書名或作者" style="flex: 1;">
-      <button onclick="renderBooks(allBooks)">搜尋</button>
+  <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>
+        <img src="/book-sharing-system/assets/img/12260_color.png" alt="icon" style="height: 40px; vertical-align: middle;">
+        書籍瀏覽
+      </h2>
+      <div>
+        <?php if ($user_name): ?>
+          👋 歡迎，<?= htmlspecialchars($user_name) ?>
+          <a href="/book-sharing-system/backend/logout.php" class="btn btn-outline-secondary btn-sm ms-2">登出</a>
+        <?php else: ?>
+          <a href="/book-sharing-system/frontend/login.html" class="btn btn-primary">登入</a>
+        <?php endif; ?>
+      </div>
     </div>
-    <select id="sortSelect">
-      <option value="new">最新上架</option>
-      <option value="rating">評分高到低</option>
-    </select>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+      <?php foreach ($books as $book): ?>
+        <div class="col">
+          <div class="card book-card shadow-sm">
+            <img src="<?= htmlspecialchars($book['cover_url']) ?>" alt="封面" class="book-cover">
+            <div class="card-body">
+              <h5 class="card-title"><?= htmlspecialchars($book['title']) ?></h5>
+              <p class="card-text mb-1"><strong>作者：</strong><?= htmlspecialchars($book['authors']) ?: '未知' ?></p>
+              <p class="card-text mb-1"><strong>出版社：</strong><?= htmlspecialchars($book['publisher']) ?: '未知' ?></p>
+              <p class="card-text mb-2"><strong>分類：</strong><?= htmlspecialchars($book['category']) ?: '無' ?></p>
+              <div class="d-grid gap-1">
+                <button class="btn btn-outline-primary btn-sm">➕ 加入書櫃</button>
+                <a href="/book-sharing-system/frontend/book_detail.php?book_id=<?= $book['book_id'] ?>" class="btn btn-info btn-sm">🔍 查看詳情</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    </div>
   </div>
-
-  <div id="bookContainer"></div>
-</div>
-
-<!-- 書櫃選擇彈窗 -->
-<div id="shelfSelectorModal">
-  <h3>選擇書櫃</h3>
-  <select id="shelfSelect" style="width:100%; padding:8px;"></select>
-  <br><br>
-  <button onclick="confirmAddToShelf()">確定</button>
-  <button onclick="closeShelfSelector()">取消</button>
-</div>
-<div id="modalBackdrop" onclick="closeShelfSelector()"></div>
-
-<script>
-let allBooks = {};
-const isLoggedIn = <?= $is_logged_in ? 'true' : 'false' ?>;
-let selectedBookId = null;
-
-function renderBooks(data) {
-  const container = document.getElementById("bookContainer");
-  container.innerHTML = "";
-  const searchKeyword = document.getElementById("searchInput").value.toLowerCase();
-  const sortBy = document.getElementById("sortSelect").value;
-
-  Object.entries(data).forEach(([category, books]) => {
-    let filtered = books.filter(b => 
-      b.title.toLowerCase().includes(searchKeyword) || 
-      b.authors.toLowerCase().includes(searchKeyword)
-    );
-    if (sortBy === "rating") {
-      filtered.sort((a, b) => b.avg_rating - a.avg_rating);
-    } else {
-      filtered.sort((a, b) => b.book_id - a.book_id);
-    }
-    if (filtered.length === 0) return;
-
-    const block = document.createElement("div");
-    block.className = "category-block";
-    block.innerHTML = `<div class="category-title">${category}</div><div class="book-grid"></div>`;
-    const grid = block.querySelector(".book-grid");
-
-    filtered.forEach(book => {
-      const card = document.createElement("div");
-      card.className = "book-card";
-      card.innerHTML = `
-        <img src="${book.cover_url}" alt="cover">
-        <h3>${book.title}</h3>
-        <p>作者：${book.authors}</p>
-        <p>評分：${parseFloat(book.avg_rating).toFixed(1)}</p>
-        <button onclick="openShelfSelector(${book.book_id})">加入書架</button>
-      `;
-      grid.appendChild(card);
-    });
-
-    container.appendChild(block);
-  });
-}
-
-function openShelfSelector(bookId) {
-  if (!isLoggedIn) {
-    alert("請先登入才能加入書架！");
-    window.location.href = "/book-sharing-system/frontend/login.html";
-    return;
-  }
-  selectedBookId = bookId;
-
-  fetch("/book-sharing-system/backend/get_shelves.php")
-    .then(res => res.json())
-    .then(data => {
-      if (data.success && data.shelves.length > 0) {
-        const select = document.getElementById("shelfSelect");
-        select.innerHTML = "";
-        data.shelves.forEach(shelf => {
-          const option = document.createElement("option");
-          option.value = shelf.shelf_id;
-          option.textContent = shelf.name;
-          select.appendChild(option);
-        });
-        document.getElementById("shelfSelectorModal").style.display = "block";
-        document.getElementById("modalBackdrop").style.display = "block";
-      } else {
-        alert("尚未建立任何書櫃，請先前往建立書櫃！");
-      }
-    })
-    .catch(() => alert("無法取得書櫃列表"));
-}
-
-function closeShelfSelector() {
-  document.getElementById("shelfSelectorModal").style.display = "none";
-  document.getElementById("modalBackdrop").style.display = "none";
-  selectedBookId = null;
-}
-
-function confirmAddToShelf() {
-  const shelfId = document.getElementById("shelfSelect").value;
-  if (!shelfId || !selectedBookId) return;
-
-  fetch("/book-sharing-system/backend/add_book_to_shelf.php", {
-    method: "POST",
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `book_id=${selectedBookId}&shelf_id=${shelfId}`
-  })
-    .then(res => res.json())
-    .then(data => {
-      alert(data.message || "已加入書櫃！");
-      closeShelfSelector();
-    })
-    .catch(() => {
-      alert("加入書櫃失敗！");
-      closeShelfSelector();
-    });
-}
-
-document.getElementById("searchInput").addEventListener("input", () => renderBooks(allBooks));
-document.getElementById("sortSelect").addEventListener("change", () => renderBooks(allBooks));
-
-fetch("/book-sharing-system/backend/get_books_group.php")
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      allBooks = data.books_by_category;
-      renderBooks(allBooks);
-    } else {
-      alert("載入書籍失敗！");
-    }
-  });
-</script>
 </body>
 </html>
