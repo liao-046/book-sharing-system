@@ -5,24 +5,24 @@
       justify-content: space-between;
       align-items: center;
       padding: 14px 28px;
-      background: linear-gradient(90deg, #3b82f6, #6366f1);
-      color: white;
+      background:rgb(224, 224, 224);
+      color: #111827;
       font-family: 'Segoe UI', sans-serif;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-bottom: 1px solid #e5e7eb;
       position: sticky;
       top: 0;
       z-index: 1000;
     }
 
     .logo {
-      font-size: 1.6em;
-      font-weight: bold;
+      font-size: 1.5em;
+      font-weight: 600;
     }
 
     .nav-group {
       display: flex;
       align-items: center;
-      gap: 20px;
+      gap: 16px;
     }
 
     .dropdown {
@@ -30,18 +30,19 @@
     }
 
     .dropbtn {
-      background: rgba(255,255,255,0.15);
-      color: white;
-      padding: 10px 16px;
-      border: none;
+      background:rgb(255, 255, 255);
+      color: #111827;
+      padding: 8px 14px;
+      border: 1px solid #d1d5db;
       border-radius: 999px;
       font-size: 0.95em;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: background 0.2s, border-color 0.2s;
     }
 
     .dropbtn:hover {
-      background: rgba(255,255,255,0.3);
+      background: #f3f4f6;
+      border-color: #9ca3af;
     }
 
     .dropdown-content {
@@ -49,26 +50,27 @@
       position: absolute;
       right: 0;
       top: 110%;
-      background: white;
+      background: #ffffff;
       min-width: 180px;
-      border-radius: 10px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       overflow: hidden;
       animation: fadeIn 0.2s ease-in-out;
       z-index: 999;
+      border: 1px solid #e5e7eb;
     }
 
     .dropdown-content a {
       display: block;
-      padding: 12px 18px;
-      color: #1f2937;
+      padding: 10px 16px;
+      color: #111827;
       text-decoration: none;
+      font-size: 0.95em;
       transition: background 0.2s;
     }
 
     .dropdown-content a:hover {
-      background: #f3f4f6;
-      color: #2563eb;
+      background: #f9fafb;
     }
 
     .dropdown.active .dropdown-content {
@@ -80,25 +82,27 @@
       border-radius: 999px;
       text-decoration: none;
       font-weight: 500;
-      transition: background 0.3s;
+      font-size: 0.95em;
+      transition: background 0.3s, color 0.3s;
+      border: 1px solid #d1d5db;
     }
 
     .login-btn {
-      background: white;
-      color: #3b82f6;
+      background:rgb(255, 255, 255);
+      color: #111827;
     }
 
     .signup-btn {
-      background: #10b981;
-      color: white;
+      background:rgb(207, 180, 2);
+      color: #ffffff;
     }
 
     .login-btn:hover {
-      background: #e5e7eb;
+      background: #f3f4f6;
     }
 
     .signup-btn:hover {
-      background: #059669;
+      background:rgb(241, 147, 147);
     }
 
     @keyframes fadeIn {
@@ -129,7 +133,7 @@
       </div>
     <?php else: ?>
       <a href="/book-sharing-system/frontend/login.html" class="login-btn">登入</a>
-      <a href="/book-sharing-system/frontend/signup.html" class="signup-btn">註冊</a>
+      <a href="/book-sharing-system/frontend/register.html" class="signup-btn">註冊</a>
     <?php endif; ?>
   </div>
 </header>
