@@ -50,13 +50,14 @@ $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
         書籍瀏覽
       </h2>
       <div>
-        <?php if ($user_name): ?>
-          👋 歡迎，<?= htmlspecialchars($user_name) ?>
-          <a href="/book-sharing-system/backend/logout.php" class="btn btn-outline-secondary btn-sm ms-2">登出</a>
-        <?php else: ?>
-          <a href="/book-sharing-system/frontend/login.html" class="btn btn-primary">登入</a>
-        <?php endif; ?>
-      </div>
+  <?php if ($user_name): ?>
+    👋 歡迎，<a href="/book-sharing-system/frontend/edit_profile.php" class="text-decoration-none"><?= htmlspecialchars($user_name) ?></a>
+    <a href="/book-sharing-system/frontend/book_shelf_list.html" class="btn btn-outline-success btn-sm ms-2">📚 我的書櫃</a>
+    <a href="/book-sharing-system/backend/logout.php" class="btn btn-outline-secondary btn-sm ms-2">登出</a>
+  <?php else: ?>
+    <a href="/book-sharing-system/frontend/login.html" class="btn btn-primary">登入</a>
+  <?php endif; ?>
+</div>
     </div>
 
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">

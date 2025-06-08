@@ -2,28 +2,63 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <title>書櫃</title>
+  <title>書櫃內容</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { background: #f5f5f5; }
-    .card-img-top { height: 200px; object-fit: cover; }
+    body {
+      background: #f8f9fa;
+      padding-top: 40px;
+    }
+    h3 span {
+      vertical-align: middle;
+    }
+    .card {
+      transition: transform 0.2s, box-shadow 0.2s;
+      border-radius: 10px;
+    }
+    .card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+    .card-img-top {
+      height: 220px;
+      object-fit: cover;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+    }
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .card-text {
+      font-size: 0.95rem;
+      color: #555;
+    }
+    .btn-remove {
+      margin-top: 8px;
+    }
+    #emptyMessage {
+      background-color: #e2f0ff;
+      border: 1px solid #bee0ff;
+      color: #0c5460;
+    }
   </style>
 </head>
 <body>
-<div class="container mt-4">
-  <h3>
+<div class="container">
+  <h3 class="mb-4">
     <span id="shelfIcon">📁</span>
     <span id="shelfName">我的書櫃</span>
   </h3>
 
-  <div id="emptyMessage" class="alert alert-info text-center mt-4" style="display: none;">
+  <div id="emptyMessage" class="alert text-center" style="display: none;">
     📭 目前書櫃是空的
-    <button class="btn btn-primary btn-sm ms-2" onclick="window.location.href='/book-sharing-system/frontend/index.html'">
+    <button class="btn btn-primary btn-sm ms-2" onclick="window.location.href='/book-sharing-system/frontend/index.php'">
       ➕ 加入書籍
     </button>
   </div>
 
-  <div id="bookList" class="row mt-3"></div>
+  <div id="bookList" class="row g-4"></div>
 </div>
 
 <script>
@@ -57,18 +92,22 @@ fetch(`/book-sharing-system/backend/get_shelf_books.php?shelf_id=${shelfId}`)
     emptyMessage.style.display = 'none';
 
     data.books.forEach(book => {
+      const col = document.createElement('div');
+      col.className = 'col-sm-6 col-md-4 col-lg-3';
+
       const card = document.createElement('div');
-      card.className = 'col-md-4 mb-3';
+      card.className = 'card h-100';
+
       card.innerHTML = `
-        <div class="card h-100">
-          <img src="${book.cover_url || '/default_cover.jpg'}" class="card-img-top">
-          <div class="card-body">
-            <h5 class="card-title">${book.title}</h5>
-            <p class="card-text">${book.authors}</p>
-            <button class="btn btn-outline-danger btn-sm" onclick="removeFromShelf(${book.book_id})">🗑️ 從書櫃移除</button>
-          </div>
-        </div>`;
-      bookList.appendChild(card);
+        <img src="${book.cover_url || '/default_cover.jpg'}" class="card-img-top" alt="封面">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">${book.title}</h5>
+          <p class="card-text mb-1"><strong>作者：</strong>${book.authors || '未知'}</p>
+          <button class="btn btn-outline-danger btn-sm mt-auto btn-remove" onclick="removeFromShelf(${book.book_id})">🗑️ 移除書籍</button>
+        </div>
+      `;
+      col.appendChild(card);
+      bookList.appendChild(col);
     });
   })
   .catch(() => alert('無法載入書櫃資料'));
