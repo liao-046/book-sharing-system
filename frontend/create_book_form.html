@@ -4,68 +4,241 @@
 <head>
   <meta charset="UTF-8">
   <title>新增書籍</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #333;
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 1.6em;
+      margin: 0;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .actions button {
+      background-color: transparent;
+      border: none;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .login-btn { background-color: #2196F3; }
+    .logout-btn { background-color: #f44336; }
+    .bookshelf-btn { background-color: #4CAF50; }
+
+    .actions button:hover {
+      background-color: #555;
+    }
+
+    .container {
+      max-width: 600px;
+      background-color: #fff;
+      margin: 50px auto;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 1.5em;
+    }
+
+    form label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: bold;
+      color: #444;
+    }
+
+    input[type="text"],
+    input[type="url"],
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 4px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    #authors .author-field {
+      margin-bottom: 10px;
+    }
+
+    #authors .author-field input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 16px;
+      font-size: 1em;
+      border: none;
+      border-radius: 6px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .add-author-btn {
+      background-color: #28a745;
+      margin-bottom: 20px;
+    }
+
+    .add-author-btn:hover {
+      background-color: #218838;
+    }
+  </style>
 </head>
 <body>
+
+<header>
+  <h1>
+    <?php if ($is_logged_in): ?>
+      歡迎，<?= $user_name ?>！
+    <?php else: ?>
+      書櫃分享系統
+    <?php endif; ?>
+  </h1>
+  <div class="actions">
+    <?php if (!$is_logged_in): ?>
+      <button class="login-btn" onclick="location.href='/book-sharing-system/frontend/login.html'">登入</button>
+    <?php else: ?>
+      <button class="logout-btn" onclick="location.href='/book-sharing-system/backend/logout.php'">登出</button>
+      <button class="bookshelf-btn" onclick="location.href='/book-sharing-system/frontend/bookshelf_list.html'">我的書櫃</button>
+    <?php endif; ?>
+  </div>
+</header>
+
+<div class="container">
   <h2>新增書籍（支援多位作者）</h2>
 
   <form id="bookForm">
-    <label>書名：<input type="text" name="title" required></label><br>
-    <label>出版社：<input type="text" name="publisher"></label><br>
-    <label>分類：<input type="text" name="category"></label><br>
-    <label>封面 URL：<input type="text" name="cover_url"></label><br>
-    <label>簡介：<textarea name="description"></textarea></label><br>
+    <label>書名：
+      <input type="text" name="title" placeholder="例如：小王子" required>
+    </label>
+
+    <label>出版社：
+      <input type="text" name="publisher" placeholder="例如：尖端出版">
+    </label>
+
+    <label>分類：
+      <input type="text" name="category" placeholder="例如：言情、恐怖、科幻">
+    </label>
+
+    <label>封面 URL：
+      <input type="url" name="cover_url" placeholder="https://example.com/cover.jpg">
+    </label>
+
+    <label>簡介：
+      <textarea name="description" placeholder="簡要介紹書籍內容..."></textarea>
+    </label>
 
     <div id="authors">
-      <label>作者 1：<input type="text" name="author" required></label>
+      <div class="author-field">
+        <label>作者 1：
+          <input type="text" name="author" placeholder="請輸入作者名稱" required>
+        </label>
+      </div>
     </div>
-    <button type="button" onclick="addAuthor()">新增作者欄位</button><br><br>
 
+    <button type="button" class="add-author-btn" onclick="addAuthor()">＋ 新增作者欄位</button><br>
     <button type="submit">提交</button>
   </form>
+</div>
 
-  <script>
-    let authorCount = 1;
+<script>
+  let authorCount = 1;
 
-    function addAuthor() {
-      authorCount++;
-      const div = document.createElement("div");
-      div.innerHTML = `作者 ${authorCount}：<input type="text" name="author">`;
-      document.getElementById("authors").appendChild(div);
+  function addAuthor() {
+    authorCount++;
+    const div = document.createElement("div");
+    div.className = "author-field";
+    div.innerHTML = `
+      <label>作者 ${authorCount}：
+        <input type="text" name="author" placeholder="請輸入作者名稱">
+      </label>`;
+    document.getElementById("authors").appendChild(div);
+  }
+
+  document.getElementById("bookForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+    const authors = [];
+
+    form.querySelectorAll('input[name="author"]').forEach(input => {
+      const name = input.value.trim();
+      if (name) authors.push(name);
+    });
+
+    const data = {
+      title: formData.get("title"),
+      publisher: formData.get("publisher"),
+      category: formData.get("category"),
+      cover_url: formData.get("cover_url"),
+      description: formData.get("description"),
+      authors: authors
+    };
+
+    if (!data.title) {
+      alert("請填寫書名！");
+      return;
+    }
+    if (authors.length === 0) {
+      alert("請至少輸入一位作者！");
+      return;
     }
 
-    document.getElementById("bookForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-
-      const form = e.target;
-      const formData = new FormData(form);
-      const authors = [];
-
-      form.querySelectorAll('input[name="author"]').forEach(input => {
-        const name = input.value.trim();
-        if (name) authors.push(name);
-      });
-
-      const data = {
-        title: formData.get("title"),
-        publisher: formData.get("publisher"),
-        category: formData.get("category"),
-        cover_url: formData.get("cover_url"),
-        description: formData.get("description"),
-        authors: authors
-      };
-
-      const response = await fetch("../backend/create_book.php", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        credentials: "include", // 讓 cookie (PHPSESSID) 傳過去
-        body: JSON.stringify(data)
-      });
-
-      const result = await response.json();
-      alert(result.message);
+    const response = await fetch("../backend/create_book.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data)
     });
-  </script>
+
+    const result = await response.json();
+    alert(result.message);
+
+    if (result.success) {
+      form.reset();
+    }
+  });
+</script>
 </body>
 </html>
