@@ -57,6 +57,9 @@ $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
   </div>
 
   <form id="deleteForm">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <a href="/book-sharing-system/frontend/create_book_form.html" class="btn btn-success btn-sm">➕ 新增書籍</a>
+    </div>
     <div class="mb-2">
       <button type="submit" class="btn btn-danger btn-sm">🗑️ 刪除選取</button>
     </div>
