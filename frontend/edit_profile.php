@@ -7,7 +7,8 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['user_name'];
-
+$error = $_GET['error'] ?? null;
+$success = $_GET['success'] ?? null;
 ?>
 <!DOCTYPE html>
 <html lang="zh-Hant">
@@ -23,6 +24,13 @@ $user_name = $_SESSION['user_name'];
 <body>
 <div class="container">
   <h2 class="mb-4">✏️ 編輯個人資料</h2>
+
+  <?php if ($error): ?>
+    <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+  <?php elseif ($success): ?>
+    <div class="alert alert-success">✅ <?= htmlspecialchars($success) ?></div>
+  <?php endif; ?>
+
   <form method="POST" action="../backend/update_profile.php">
     <div class="mb-3">
       <label for="name" class="form-label">暱稱</label>
@@ -30,7 +38,12 @@ $user_name = $_SESSION['user_name'];
     </div>
 
     <div class="mb-3">
-      <label for="password" class="form-label">新密碼（可留空不修改）</label>
+      <label for="current_password" class="form-label">🔒 目前密碼 <span class="text-danger">*</span></label>
+      <input type="password" class="form-control" id="current_password" name="current_password" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="password" class="form-label">🆕 新密碼（可留空不變更）</label>
       <input type="password" class="form-control" id="password" name="password">
     </div>
 
