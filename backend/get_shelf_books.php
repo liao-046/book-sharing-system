@@ -15,8 +15,8 @@ if (!$user_id || !$shelf_id) {
     exit;
 }
 
-// ✅ 修正：補上 icon 欄位
-$stmt = $pdo->prepare("SELECT name, icon FROM book_shelf WHERE shelf_id = ? AND user_id = ?");
+// ✅ 讀取書櫃資料，包括 background_url
+$stmt = $pdo->prepare("SELECT name, icon, background_url FROM book_shelf WHERE shelf_id = ? AND user_id = ?");
 $stmt->execute([$shelf_id, $user_id]);
 $shelf = $stmt->fetch();
 
@@ -25,7 +25,7 @@ if (!$shelf) {
     exit;
 }
 
-// 查詢書籍清單
+// ✅ 查詢書櫃中的書籍清單
 $stmt = $pdo->prepare("
     SELECT 
         b.book_id,
@@ -43,9 +43,11 @@ $stmt = $pdo->prepare("
 $stmt->execute([$shelf_id]);
 $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// ✅ 回傳包含背景網址
 echo json_encode([
-  'success' => true,
-  'shelf_name' => $shelf['name'],
-  'icon' => $shelf['icon'] ?? '📁', // 這邊才會有值
-  'books' => $books
+    'success' => true,
+    'shelf_name' => $shelf['name'],
+    'icon' => $shelf['icon'] ?? '📁',
+    'background_url' => $shelf['background_url'] ?? null,
+    'books' => $books
 ]);

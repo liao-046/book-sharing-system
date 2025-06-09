@@ -6,42 +6,87 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
   <script src="/book-sharing-system/assets/js/silent_share_alert.js"></script>
-
   <style>
     body {
       background: #f8f9fa;
-      padding-top: 40px;
+      padding-top: 0;
+      margin: 0;
     }
-    h3 span {
+
+    .header-banner {
+      position: relative;
+      height: 200px;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      cursor: pointer;
+    }
+
+    .header-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      backdrop-filter: blur(4px);
+      background-color: rgba(0, 0, 0, 0.3);
+      z-index: 1;
+    }
+
+    .header-content {
+      position: absolute;
+      top: 50%;
+      left: 40px;
+      transform: translateY(-50%);
+      z-index: 2;
+      color: white;
+    }
+
+    .header-content h3 {
+      font-size: 2rem;
+      font-weight: bold;
+    }
+
+    .header-content #shelfIcon {
+      font-size: 2rem;
+      cursor: pointer;
+      margin-right: 10px;
       vertical-align: middle;
     }
+
     .card {
       transition: transform 0.2s, box-shadow 0.2s;
       border-radius: 10px;
     }
+
     .card:hover {
       transform: scale(1.02);
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     }
+
     .card-img-top {
       height: 220px;
       object-fit: cover;
       border-top-left-radius: 10px;
       border-top-right-radius: 10px;
     }
+
     .card-title {
       font-size: 1.1rem;
       font-weight: 600;
     }
+
     .card-text {
       font-size: 0.95rem;
       color: #555;
     }
+
     #emptyMessage {
       background-color: #e2f0ff;
       border: 1px solid #bee0ff;
       color: #0c5460;
     }
+
     emoji-picker {
       max-width: 300px;
       margin-top: 10px;
@@ -49,20 +94,36 @@
   </style>
 </head>
 <body>
-<div class="container">
-  <h3 class="mb-3 position-relative">
-    <span id="shelfIcon" style="cursor: pointer;">📁</span>
-    <span id="shelfName">我的書櫃</span>
+
+<!-- 背景橫幅 -->
+<div id="backgroundArea" class="header-banner">
+  <!-- 放在 header-banner 最前面 -->
+  <a href="/book-sharing-system/frontend/index.php"
+  id="backButton"
+  class="position-absolute top-0 start-0 m-3 d-flex align-items-center justify-content-center"
+  style="
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(4px);
+    text-decoration: none;
+    font-size: 18px;
+    color: white;
+    z-index: 3;
+    transition: background-color 0.2s ease;"> ⬅
+</a>
+
+
+  <div class="header-overlay"></div>
+  <div class="header-content">
+    <span id="shelfIcon">📁</span>
+    <h3 id="shelfName" class="d-inline">我的書櫃</h3>
     <emoji-picker id="emojiPicker" style="display:none; position:absolute; top: 100%; left: 0; z-index: 1000;"></emoji-picker>
-  </h3>
-
-  <!-- 背景圖片設定區塊 -->
-  <div class="mb-4">
-    <label for="bgInput" class="form-label">背景圖片網址：</label>
-    <input type="url" id="bgInput" class="form-control" placeholder="https://example.com/bg.jpg">
-    <button class="btn btn-outline-primary btn-sm mt-2" onclick="updateBackground()">更新背景</button>
   </div>
+</div>
 
+<div class="container mt-4">
   <div id="emptyMessage" class="alert text-center" style="display: none;">
     📭 目前書櫃是空的
     <button class="btn btn-primary btn-sm ms-2" onclick="window.location.href='/book-sharing-system/frontend/index.php'">
@@ -80,13 +141,14 @@
     location.href = 'index.html';
   }
 
-  // 點 icon 彈出 emoji picker
-  document.getElementById('shelfIcon').addEventListener('click', () => {
+  // 點 emoji 圖示彈出 emoji picker
+  document.getElementById('shelfIcon').addEventListener('click', (e) => {
+    e.stopPropagation();
     const picker = document.getElementById('emojiPicker');
     picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
   });
 
-  // 點 emoji 後更新 icon 並傳到後端
+  // 點 emoji 更新 icon
   document.getElementById('emojiPicker').addEventListener('emoji-click', event => {
     const emoji = event.detail.unicode;
     document.getElementById('shelfIcon').textContent = emoji;
@@ -106,7 +168,7 @@
       .catch(() => alert('無法更新 icon'));
   });
 
-  // 點其他地方自動關閉 emoji picker
+  // 點其他地方關閉 emoji picker
   document.addEventListener('click', (e) => {
     const picker = document.getElementById('emojiPicker');
     const icon = document.getElementById('shelfIcon');
@@ -114,6 +176,38 @@
       picker.style.display = 'none';
     }
   });
+
+  // 點背景橫幅可更換圖片
+  document.getElementById('backgroundArea').addEventListener('click', (e) => {
+     // 若使用者點的是子元素（如按鈕），則不執行換背景
+    if (e.target !== e.currentTarget) return;
+    const newUrl = prompt('輸入新的背景圖片網址：');
+    if (newUrl && newUrl.trim()) {
+      updateBackground(newUrl.trim());
+    }
+  });
+
+  function updateBackground(bgUrl) {
+    fetch('/book-sharing-system/backend/update_shelf_bg.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ shelf_id: shelfId, background_url: bgUrl })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById('backgroundArea').style.backgroundImage = `url('${bgUrl}')`;
+          document.body.style.backgroundImage = `url('${bgUrl}')`;
+          document.body.style.backgroundSize = 'cover';
+          document.body.style.backgroundAttachment = 'fixed';
+          document.body.style.backgroundPosition = 'center';
+          document.body.style.backgroundRepeat = 'no-repeat';
+        } else {
+          alert('背景更新失敗：' + data.message);
+        }
+      })
+      .catch(() => alert('無法更新背景圖片'));
+  }
 
   // 載入書櫃資料
   fetch(`/book-sharing-system/backend/get_shelf_books.php?shelf_id=${shelfId}`)
@@ -132,14 +226,13 @@
       if ('shelf_name' in data) shelfName.textContent = data.shelf_name;
       if ('icon' in data) shelfIcon.textContent = data.icon ?? '📁';
 
-      // 套用背景圖片
       if ('background_url' in data && data.background_url) {
+        document.getElementById('backgroundArea').style.backgroundImage = `url('${data.background_url}')`;
         document.body.style.backgroundImage = `url('${data.background_url}')`;
         document.body.style.backgroundSize = 'cover';
         document.body.style.backgroundAttachment = 'fixed';
         document.body.style.backgroundPosition = 'center';
         document.body.style.backgroundRepeat = 'no-repeat';
-        document.getElementById('bgInput').value = data.background_url;
       }
 
       if (!data.books || data.books.length === 0) {
@@ -175,7 +268,6 @@
     })
     .catch(() => alert('無法載入書櫃資料'));
 
-  // 移除書籍功能
   function removeFromShelf(bookId) {
     if (!confirm('確定要從書櫃中移除此書籍？')) return;
     fetch('/book-sharing-system/backend/remove_from_shelf.php', {
@@ -192,35 +284,6 @@
         }
       });
   }
-
-  // 更新背景圖片功能
-  function updateBackground() {
-    const bgUrl = document.getElementById('bgInput').value.trim();
-    if (!bgUrl) {
-      alert('請輸入背景圖片網址');
-      return;
-    }
-
-    fetch('/book-sharing-system/backend/update_shelf_bg.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ shelf_id: shelfId, background_url: bgUrl })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          document.body.style.backgroundImage = `url('${bgUrl}')`;
-          document.body.style.backgroundSize = 'cover';
-          document.body.style.backgroundAttachment = 'fixed';
-          document.body.style.backgroundPosition = 'center';
-          document.body.style.backgroundRepeat = 'no-repeat';
-        } else {
-          alert('背景更新失敗：' + data.message);
-        }
-      })
-      .catch(() => alert('無法更新背景圖片'));
-  }
 </script>
-
 </body>
 </html>
