@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>書櫃分享系統 | Book Sharing Platform</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .feature-icon {
+      font-size: 3rem;
+      color: #3b82f6;
+    }
+    .section-title {
+      margin-top: 60px;
+      margin-bottom: 30px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .footer {
+      background-color: #f8f9fa;
+      padding: 30px 0;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar 
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">書櫃分享系統</a>
+    <div>
+      <a href="login.html" class="btn btn-light me-2">登入</a>
+      <a href="register.html" class="btn btn-success">註冊</a>
+    </div>
+  </div>
+</nav>-->
+<!-- <nav style="background-color: #2e2e2e; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; color: white; font-weight: bold;">
+  <div>
+    歡迎<?= $is_logged_in ? "，{$user_name}" : "" ?>！書櫃分享系統
+  </div>
+  <div style="display: flex; gap: 30px;">
+    <?php if (!$is_logged_in): ?>
+      <a href="/book-sharing-system/frontend/login.html" style="color: white; text-decoration: none;">登入</a>
+    <?php else: ?>
+      <a href="/book-sharing-system/backend/logout.php" style="color: white; text-decoration: none;">登出</a>
+      <a href="/book-sharing-system/frontend/book_shelf_list.html" style="color: white; text-decoration: none;">我的書櫃</a>
+    <?php endif; ?>
+  </div>
+</nav>
+-->
+<nav style="
+  background-color: #2e2e2e;
+  padding: 18px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Segoe UI', sans-serif;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+">
+  <div>
+    歡迎<?= $is_logged_in ? "，{$user_name}" : "" ?>！書櫃分享系統
+  </div>
+  <div style="display: flex; gap: 36px;">
+    <?php if (!$is_logged_in): ?>
+      <a href="/book-sharing-system/frontend/login.html" style="color: white; text-decoration: none;">登入</a>
+    <?php else: ?>
+      <a href="/book-sharing-system/backend/logout.php" style="color: white; text-decoration: none;">登出</a>
+      <a href="/book-sharing-system/frontend/book_shelf_list.html" style="color: white; text-decoration: none;">我的書櫃</a>
+    <?php endif; ?>
+  </div>
+</nav>
+<!-- Carousel -->
+<div id="carouselBanner" class="carousel slide" data-bs-ride="carousel">
+  <div class="carousel-inner">
+    <div class="carousel-item active">
+      <img src="https://picsum.photos/1200/400?random=1" class="d-block w-100" alt="...">
+      <div class="carousel-caption d-none d-md-block">
+        <h5>探索並收藏你喜歡的書籍</h5>
+        <p>隨時隨地分享與管理個人書櫃。</p>
+      </div>
+    </div>
+    <div class="carousel-item">
+      <img src="https://picsum.photos/1200/400?random=2" class="d-block w-100" alt="...">
+      <div class="carousel-caption d-none d-md-block">
+        <h5>與好友靜音分享推薦</h5>
+        <p>使用「靜音模式」悄悄分享好書。</p>
+      </div>
+    </div>
+    <div class="carousel-item">
+      <img src="https://picsum.photos/1200/400?random=3" class="d-block w-100" alt="...">
+      <div class="carousel-caption d-none d-md-block">
+        <h5>建立個人書櫃，輕鬆管理</h5>
+        <p>分類書籍、加入筆記、評分與標籤。</p>
+      </div>
+    </div>
+  </div>
+  <button class="carousel-control-prev" type="button" data-bs-target="#carouselBanner" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon"></span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#carouselBanner" data-bs-slide="next">
+    <span class="carousel-control-next-icon"></span>
+  </button>
+</div>
+
+<!-- About Section -->
+<div class="container">
+  <h2 class="section-title">什麼是書櫃分享系統？</h2>
+  <p class="text-center">
+    書櫃分享系統是一個讓用戶可以收藏書籍、建立書櫃、進行評分與分享的網路平台。<br>
+    我們致力於打造一個簡潔又互動性高的閱讀社群空間。
+  </p>
+
+  <div class="row text-center mt-5">
+    <div class="col-md-4">
+      <div class="feature-icon">📚</div>
+      <h5 class="mt-3">收藏管理</h5>
+      <p>自由建立書櫃，收藏書籍並加上分類、評分與備註。</p>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-icon">🧑‍🤝‍🧑</div>
+      <h5 class="mt-3">好友分享</h5>
+      <p>透過靜音分享模式，悄悄地把好書送給好友或其他使用者。</p>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-icon">🔍</div>
+      <h5 class="mt-3">搜尋與分類</h5>
+      <p>支援書名、作者搜尋與多種分類瀏覽。</p>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer mt-5">
+  <p>&copy; 2025 書櫃分享系統. All rights reserved.</p>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
