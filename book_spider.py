@@ -72,16 +72,18 @@ def save_book_to_db(conn, book):
 
 if __name__ == '__main__':
     db_config = {
-        'host': '140.122.184.128',
+        'host': '127.0.0.1',
         'port': 3306,
-        'user': 'team19',
-        'password': 'Wy$Kq83Nbm',
-        'database': 'team19',
+        'user': 'admin',
+        'password': 'Admin1234!',
+        'database': 'book_system',
         'charset': 'utf8mb4'
     }
     
     book_urls = [
         'https://www.books.com.tw/products/0011021052',
+        'https://www.books.com.tw/products/0011002289',
+        'https://www.books.com.tw/products/0010870942'
         # 你可以加更多書籍網址
     ]
     

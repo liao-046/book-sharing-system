@@ -2,11 +2,9 @@
 session_start();
 require_once '../backend/db.php';
 
-// 使用者資訊
 $user_id = $_SESSION['user_id'] ?? null;
 $user_name = $_SESSION['user_name'] ?? null;
 
-// 撈取所有書籍與作者 + 評分
 $stmt = $pdo->query("
   SELECT b.book_id, b.title, b.publisher, b.category, b.cover_url,
          GROUP_CONCAT(a.name SEPARATOR ', ') AS authors,
@@ -21,7 +19,6 @@ $stmt = $pdo->query("
 ");
 $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// 撈取使用者已加入的書籍 ID（若已登入）
 $addedBookIds = [];
 if ($user_id) {
   $stmt = $pdo->prepare("
@@ -96,18 +93,18 @@ if ($user_id) {
             <h5 class="card-title"><?= htmlspecialchars($book['title']) ?></h5>
 
             <?php
-$first_author = explode(',', $book['authors'] ?? '')[0] ?? '';
-$first_author = trim($first_author);
-$chars = preg_split('//u', $first_author, -1, PREG_SPLIT_NO_EMPTY);
-$short_author = implode('', array_slice($chars, 0, 5));
-$show_ellipsis = count($chars) > 5;
-?>
-<p class="card-text mb-1">
-  <strong>作者：</strong>
-  <span title="<?= htmlspecialchars($book['authors'] ?? '未知') ?>">
-    <?= htmlspecialchars($short_author . ($show_ellipsis ? '...' : '')) ?: '未知' ?>
-  </span>
-</p>
+              $first_author = explode(',', $book['authors'] ?? '')[0] ?? '';
+              $first_author = trim($first_author);
+              $chars = preg_split('//u', $first_author, -1, PREG_SPLIT_NO_EMPTY);
+              $short_author = implode('', array_slice($chars, 0, 5));
+              $show_ellipsis = count($chars) > 5;
+            ?>
+            <p class="card-text mb-1">
+              <strong>作者：</strong>
+              <span title="<?= htmlspecialchars($book['authors'] ?? '未知') ?>">
+                <?= htmlspecialchars($short_author . ($show_ellipsis ? '...' : '')) ?: '未知' ?>
+              </span>
+            </p>
 
             <p class="card-text mb-1"><strong>出版社：</strong><?= htmlspecialchars($book['publisher']) ?: '未知' ?></p>
             <p class="card-text mb-2"><strong>分類：</strong><?= htmlspecialchars($book['category']) ?: '無' ?></p>
@@ -210,11 +207,14 @@ function addBookToShelf(shelfId) {
       const modal = bootstrap.Modal.getInstance(document.getElementById('addToShelfModal'));
       modal.hide();
 
+      // ✅ 更新按鈕內容與樣式（保留 onclick）
       if (currentButton) {
         currentButton.className = 'btn btn-success btn-sm';
-        currentButton.textContent = '✔ 已加入書櫃';
-        currentButton.disabled = true;
+        currentButton.innerHTML = '✔ 已加入書櫃';
       }
+
+      // ✅ 重新載入 Modal 書櫃狀態
+      addToShelfModal(currentBookId, currentButton);
     } else {
       alert('❌ ' + data.message);
     }
