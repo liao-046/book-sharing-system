@@ -3,7 +3,6 @@ session_start();
 require_once '../backend/db.php';
 
 $book_id = $_GET['book_id'] ?? null;
-
 if (!$book_id) {
   echo "錯誤：未提供書籍 ID";
   exit;
@@ -20,7 +19,6 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$book_id]);
 $book = $stmt->fetch(PDO::FETCH_ASSOC);
-
 if (!$book) {
   echo "找不到這本書";
   exit;
@@ -38,11 +36,8 @@ $user_name = $_SESSION['user_name'] ?? null;
   <style>
     body { background-color: #f8f9fa; }
     .book-cover {
-      width: 100%;
-      max-width: 300px;
-      height: auto;
-      border: 1px solid #ccc;
-      object-fit: cover;
+      width: 100%; max-width: 300px; height: auto;
+      border: 1px solid #ccc; object-fit: cover;
     }
     .star { font-size: 1.5rem; color: gold; cursor: pointer; }
     .star:hover, .star:hover ~ .star { color: orange; }
@@ -70,13 +65,13 @@ $user_name = $_SESSION['user_name'] ?? null;
       <p><strong>作者：</strong><?= htmlspecialchars($book['authors']) ?: '未知' ?></p>
       <p><strong>出版社：</strong><?= htmlspecialchars($book['publisher']) ?: '未知' ?></p>
       <p><strong>分類：</strong><?= htmlspecialchars($book['category']) ?: '無' ?></p>
+      <p id="ratingSummary"><em>正在載入評分...</em></p>
       <hr>
       <p><strong>內容簡介：</strong></p>
       <p><?= nl2br(htmlspecialchars($book['description'] ?? '尚無簡介')) ?></p>
     </div>
   </div>
 
-  <!-- 評論區 -->
   <hr>
   <h5 class="mt-4">📢 書籍評論</h5>
   <div id="myReviewSection" class="mb-4"></div>
@@ -85,6 +80,27 @@ $user_name = $_SESSION['user_name'] ?? null;
 
 <script>
 const bookId = <?= json_encode($book_id) ?>;
+const userId = <?= json_encode($user_id) ?>;
+
+function loadRatingSummary() {
+  fetch(`/book-sharing-system/backend/get_rating_summary.php?book_id=${bookId}`)
+    .then(res => res.json())
+    .then(data => {
+      const ratingDiv = document.getElementById('ratingSummary');
+      if (!data.success) {
+        ratingDiv.textContent = '評分載入失敗';
+        return;
+      }
+      if (data.total_reviews === 0) {
+        ratingDiv.innerHTML = `<strong>綜合評分：</strong>尚無評論`;
+      } else {
+        const stars = '★'.repeat(Math.round(data.avg_rating)) + '☆'.repeat(5 - Math.round(data.avg_rating));
+        ratingDiv.innerHTML = `<strong>綜合評分：</strong>
+          <span class="text-warning">${stars}</span>
+          (${data.avg_rating}/5，${data.total_reviews} 則評論)`;
+      }
+    });
+}
 
 function loadReviews() {
   fetch(`/book-sharing-system/backend/get_review.php?book_id=${bookId}`)
@@ -97,30 +113,26 @@ function loadReviews() {
 
       if (!data.success || !data.reviews) return;
 
-      const userId = <?= json_encode($user_id) ?>;
       let myReview = data.reviews.find(r => r.user_id == userId);
 
       if (myReview) {
         myReviewSection.innerHTML = `
           <div class="border rounded p-3 bg-light">
-            <div class="d-flex justify-content-between align-items-center">
-              <h6>我的評論</h6>
-              <div>
-                <button class="btn btn-sm btn-outline-primary me-2" onclick="editReview()">✏️ 編輯</button>
-                <button class="btn btn-sm btn-outline-danger" onclick="deleteReview()">🗑️ 刪除</button>
-              </div>
-            </div>
-            <div class="text-warning my-2">${renderStars(myReview.rating)}</div>
-            <p class="mb-0">${myReview.comment || '（無內容）'}</p>
+            <h6 class="mb-2">✏️ 編輯我的評論</h6>
+            <div id="starForm" class="mb-2 text-warning">${renderStarInput(myReview.rating)}</div>
+            <textarea id="commentInput" class="form-control mb-2" rows="3">${myReview.comment || ''}</textarea>
+            <button class="btn btn-primary btn-sm me-2" onclick="submitReview(true)">💾 儲存</button>
+            <button class="btn btn-outline-danger btn-sm" onclick="deleteReview()">🗑️ 刪除</button>
           </div>
         `;
+        addStarInputEvents();
       } else {
         myReviewSection.innerHTML = `
           <div class="border p-3 rounded">
             <h6 class="mb-2">新增評論</h6>
             <div id="starForm" class="mb-2 text-warning">${renderStarInput(0)}</div>
             <textarea id="commentInput" class="form-control mb-2" rows="3" placeholder="輸入評論內容（可留空）"></textarea>
-            <button class="btn btn-primary btn-sm" onclick="submitReview()">送出</button>
+            <button class="btn btn-primary btn-sm" onclick="submitReview(false)">送出</button>
           </div>
         `;
         addStarInputEvents();
@@ -145,13 +157,11 @@ function loadReviews() {
 function renderStars(score) {
   return '★'.repeat(score) + '☆'.repeat(5 - score);
 }
-
 function renderStarInput(score) {
   return Array.from({ length: 5 }, (_, i) =>
     `<span class="star" data-score="${i + 1}">${i < score ? '★' : '☆'}</span>`
   ).join('');
 }
-
 function addStarInputEvents() {
   document.querySelectorAll('#starForm .star').forEach(star => {
     star.onclick = () => {
@@ -163,12 +173,16 @@ function addStarInputEvents() {
   });
 }
 
-function submitReview() {
+function submitReview(isEdit) {
   const rating = parseInt(document.getElementById('starForm').dataset.score || 0);
   const comment = document.getElementById('commentInput').value.trim();
-  if (!rating) return alert('請點選星星評分');
+  if (!rating) return alert('請選擇星星評分');
 
-  fetch('/book-sharing-system/backend/add_review.php', {
+  const url = isEdit
+    ? '/book-sharing-system/backend/update_review.php'
+    : '/book-sharing-system/backend/add_review.php';
+
+  fetch(url, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -177,8 +191,9 @@ function submitReview() {
   .then(res => res.json())
   .then(data => {
     if (data.success) {
-      alert('✅ 評論成功');
+      alert('✅ 已儲存評論');
       loadReviews();
+      loadRatingSummary();
     } else {
       alert('❌ ' + data.message);
     }
@@ -186,8 +201,7 @@ function submitReview() {
 }
 
 function deleteReview() {
-  if (!confirm('確定刪除評論？')) return;
-
+  if (!confirm('確定要刪除這則評論？')) return;
   fetch('/book-sharing-system/backend/delete_review.php', {
     method: 'POST',
     credentials: 'include',
@@ -197,20 +211,19 @@ function deleteReview() {
   .then(res => res.json())
   .then(data => {
     if (data.success) {
-      alert('已刪除');
+      alert('✅ 已刪除評論');
       loadReviews();
+      loadRatingSummary();
     } else {
-      alert('❌ 無法刪除');
+      alert('❌ 刪除失敗');
     }
   });
 }
 
-function editReview() {
-  // 同 submitReview，可擴充為可編輯介面（略）
-  alert('請先刪除原評論再新增（可改為完整的編輯 UI）');
-}
-
-window.onload = loadReviews;
+window.onload = () => {
+  loadReviews();
+  loadRatingSummary();
+};
 </script>
 </body>
 </html>
