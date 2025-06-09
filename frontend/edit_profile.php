@@ -6,11 +6,14 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
-$user_name = $_SESSION['user_name'];
+$user_name = $_SESSION['user_name'] ?? '';
 $user_avatar = $_SESSION['user_avatar'] ?? 'default.png';
 
-// 檢查 default.png 是否存在，不存在就手動指定
-if (!file_exists(__DIR__ . '/../uploads/avatars/' . $user_avatar)) {
+// 頭像完整路徑
+$avatar_path = __DIR__ . '/../assets/img/' . $user_avatar;
+
+// 如果頭像檔案不存在，就使用預設頭像
+if (!file_exists($avatar_path) || empty($user_avatar)) {
   $user_avatar = 'default.png';
 }
 
@@ -42,9 +45,7 @@ $success = $_GET['success'] ?? null;
 </head>
 <body>
 <div class="container">
-  <h2 class="mb-4 d-flex align-items-center">
-    ✏️ 編輯個人資料
-  </h2>
+  <h2 class="mb-4 d-flex align-items-center">✏️ 編輯個人資料</h2>
 
   <?php if ($error): ?>
     <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
