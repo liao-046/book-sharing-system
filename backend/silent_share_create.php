@@ -32,20 +32,20 @@ if (!$recipient) {
 
 $receiver_id = $recipient['user_id'];
 
-// 插入 silent_share 資料
+// 插入 silent_share 資料，包含 sender_id
 $stmt = $pdo->prepare("
-  INSERT INTO silent_share (message, create_time, unlock_condition, is_open, open_time)
-  VALUES (?, NOW(), '', 1, ?)
+  INSERT INTO silent_share (message, create_time, unlock_condition, is_open, open_time, sender_id)
+  VALUES (?, NOW(), '', 1, ?, ?)
 ");
-$stmt->execute([$message, $unlock_time]);
+$stmt->execute([$message, $unlock_time, $user_id]);
 $silent_share_id = $pdo->lastInsertId();
 
-// 插入 share_book 資料，加入 sender_id
+// 插入 share_book 資料
 $stmt = $pdo->prepare("
-  INSERT INTO share_book (silent_share_id, book_id, sender_id)
-  VALUES (?, ?, ?)
+  INSERT INTO share_book (silent_share_id, book_id)
+  VALUES (?, ?)
 ");
-$stmt->execute([$silent_share_id, $book_id, $user_id]);
+$stmt->execute([$silent_share_id, $book_id]);
 
 // 插入 receives 資料
 $stmt = $pdo->prepare("
