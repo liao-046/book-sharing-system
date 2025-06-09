@@ -39,13 +39,17 @@ try {
 
     // 2. 建立通知給分享者（⚠️ 修改欄位名為 receiver_id，如果你的資料表實際是 user_id 請換回）
     $pdo->prepare("
-      INSERT INTO notifications (receiver_id, message, create_time)
-      SELECT ss.sender_id, CONCAT('📖 書籍「', b.title, '」已被接收人開啟'), NOW()
-      FROM silent_share ss
-      JOIN share_book sb ON ss.silent_share_id = sb.silent_share_id
-      JOIN book b ON sb.book_id = b.book_id
-      WHERE ss.silent_share_id = ?
-    ")->execute([$sid]);
+  INSERT INTO notifications (sender_id, receiver_id, user_id, book_title, message, notify_time)
+  SELECT ss.sender_id, r.user_id, r.user_id, b.title,
+         CONCAT('📖 書籍「', b.title, '」已被接收人開啟'),
+         NOW()
+  FROM silent_share ss
+  JOIN share_book sb ON ss.silent_share_id = sb.silent_share_id
+  JOIN book b ON sb.book_id = b.book_id
+  JOIN receives r ON ss.silent_share_id = r.silent_share_id
+  WHERE ss.silent_share_id = ?
+")->execute([$sid]);
+
 
     // 3. 找接收者的 Shared Book 書櫃（若無就建立）
     $shelf_stmt = $pdo->prepare("SELECT shelf_id FROM book_shelf WHERE user_id = ? AND name = 'Shared Book'");
