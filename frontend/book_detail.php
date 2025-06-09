@@ -271,16 +271,21 @@ function submitSilentShare() {
       unlock_time: unlockTime
     })
   })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
+  .then(res => res.text())  // ✅ 改為 text() 而不是 json()
+  .then(text => {
+    const trimmed = text.trim();
+    if (trimmed === "success") {
       alert("🎉 靜音分享成功！");
       bootstrap.Modal.getInstance(document.getElementById('silentShareModal')).hide();
     } else {
-      alert("❌ 發送失敗：" + data.message);
+      alert("❌ 發送失敗：" + trimmed.replace(/^error:\s*/, ""));
     }
+  })
+  .catch(err => {
+    alert("⚠️ 系統錯誤：" + err.message);
   });
 }
+
 
 </script>
 <script src="/book-sharing-system/assets/js/silent_share_alert.js"></script>
