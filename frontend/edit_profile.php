@@ -7,7 +7,13 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['user_name'];
-$user_avatar = $_SESSION['user_avatar'] ?? 'default.png'; // 頭像檔名，預設default.png
+$user_avatar = $_SESSION['user_avatar'] ?? 'default.png';
+
+// 檢查 default.png 是否存在，不存在就手動指定
+if (!file_exists(__DIR__ . '/../uploads/avatars/' . $user_avatar)) {
+  $user_avatar = 'default.png';
+}
+
 $error = $_GET['error'] ?? null;
 $success = $_GET['success'] ?? null;
 ?>
@@ -50,7 +56,7 @@ $success = $_GET['success'] ?? null;
     <div class="mb-3 d-flex flex-column align-items-center">
       <label for="avatar" class="form-label">更新頭像（點擊圖片可選擇）</label>
       <img
-        src="uploads/avatars/<?= htmlspecialchars($user_avatar) ?>?t=<?= time() ?>"
+        src="../assets/img/<?= htmlspecialchars($user_avatar) ?>?t=<?= time() ?>"
         alt="頭像"
         class="avatar-img"
         id="avatarPreview"
