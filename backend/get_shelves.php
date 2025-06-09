@@ -10,21 +10,29 @@ if (!$user_id) {
   exit;
 }
 
-$params = [$user_id];
 $sql = "
   SELECT s.shelf_id, s.name,
     EXISTS (
       SELECT 1 FROM bookshelf_record r
-      WHERE r.shelf_id = s.shelf_id
-      " . ($book_id ? " AND r.book_id = ?" : "") . "
+      WHERE r.shelf_id = s.shelf_id" .
+      ($book_id ? " AND r.book_id = ?" : "") . "
     ) AS already_added
   FROM book_shelf s
   WHERE s.user_id = ?
 ";
-if ($book_id) $params[] = $book_id; // 替換順序
+
+$params = [];
+if ($book_id) $params[] = $book_id;
+$params[] = $user_id;
 
 $stmt = $pdo->prepare($sql);
-$stmt->execute(array_reverse($params));
+$stmt->execute($params);
 $shelves = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// ✅ 將 already_added 字串轉為布林
+$shelves = array_map(function ($shelf) {
+  $shelf['already_added'] = $shelf['already_added'] == 1;
+  return $shelf;
+}, $shelves);
 
 echo json_encode(['success' => true, 'shelves' => $shelves]);

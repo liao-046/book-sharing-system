@@ -124,9 +124,10 @@ function addToShelfModal(bookId, btn = null) {
   currentBookId = bookId;
   currentButton = btn;
 
-  fetch('/book-sharing-system/backend/get_shelves.php', {
-    credentials: 'include'
-  })
+  fetch(`/book-sharing-system/backend/get_shelves.php?book_id=${bookId}`, {
+  credentials: 'include'
+})
+
   .then(res => res.json())
   .then(data => {
     const shelfOptions = document.getElementById('shelfOptions');
@@ -145,7 +146,7 @@ function addToShelfModal(bookId, btn = null) {
       btn.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
       btn.textContent = shelf.name;
 
-      if (shelf.already_added) {
+      if (shelf.already_added == 1) {
         btn.classList.add('disabled', 'text-secondary');
         const badge = document.createElement('span');
         badge.className = 'badge bg-success rounded-pill';

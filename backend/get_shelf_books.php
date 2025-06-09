@@ -5,17 +5,16 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 header('Content-Type: application/json');
 
-// 取得登入者 ID 和 shelf_id
 $user_id = $_SESSION['user_id'] ?? null;
 $shelf_id = $_GET['shelf_id'] ?? null;
 
-// 驗證輸入
+error_log("🧾 get_shelf_books called by user_id = $user_id, shelf_id = $shelf_id");
+
 if (!$user_id || !$shelf_id) {
     echo json_encode(['success' => false, 'message' => '未登入或缺少參數']);
     exit;
 }
 
-// 確認書櫃屬於使用者並取得名稱
 $stmt = $pdo->prepare("SELECT name FROM book_shelf WHERE shelf_id = ? AND user_id = ?");
 $stmt->execute([$shelf_id, $user_id]);
 $shelf = $stmt->fetch();
@@ -25,7 +24,7 @@ if (!$shelf) {
     exit;
 }
 
-// 查詢書櫃中的書籍與作者
+// ✅ 補上正確 SQL 查詢
 $stmt = $pdo->prepare("
     SELECT 
         b.book_id,
@@ -43,7 +42,6 @@ $stmt = $pdo->prepare("
 $stmt->execute([$shelf_id]);
 $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// 回傳 JSON
 echo json_encode([
     'success' => true,
     'shelf_name' => $shelf['name'],

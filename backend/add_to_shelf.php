@@ -1,6 +1,9 @@
 <?php
 session_start();
 require_once 'db.php';
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 
 $user_id = $_SESSION['user_id'] ?? null;
 $book_id = $_POST['book_id'] ?? null;
