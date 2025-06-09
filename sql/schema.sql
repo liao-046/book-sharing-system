@@ -7,7 +7,8 @@ CREATE TABLE user (
     name VARCHAR(50),
     email VARCHAR(100) UNIQUE,
     password VARCHAR(255),
-    is_admin BOOLEAN NOT NULL DEFAULT 0
+    is_admin BOOLEAN NOT NULL DEFAULT 0,
+    avatar VARCHAR(255) DEFAULT 'default.png'
 );
 
 -- 書籍表
