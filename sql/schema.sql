@@ -58,26 +58,26 @@ CREATE TABLE review (
     FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 
--- 靜默分享表
-CREATE TABLE silent_share (
-    silent_share_id INT AUTO_INCREMENT PRIMARY KEY,
-    message TEXT,
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    unlock_condition VARCHAR(255),
-    is_open BOOLEAN DEFAULT FALSE,
-    open_time DATETIME
-);
+    -- 靜默分享表
+    CREATE TABLE silent_share (
+        silent_share_id INT AUTO_INCREMENT PRIMARY KEY,
+        message TEXT,
+        create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+        unlock_condition VARCHAR(255),
+        is_open BOOLEAN DEFAULT FALSE,
+        open_time DATETIME
+    );
 
--- 分享書籍關聯表
-CREATE TABLE share_book (
-    silent_share_id INT,
-    book_id INT,
-    PRIMARY KEY (silent_share_id, book_id),
-    FOREIGN KEY (silent_share_id) REFERENCES silent_share(silent_share_id) ON DELETE CASCADE,
+    -- 分享書籍關聯表
+    CREATE TABLE share_book (
+        silent_share_id INT,
+        book_id INT,
+        PRIMARY KEY (silent_share_id, book_id),
+        FOREIGN KEY (silent_share_id) REFERENCES silent_share(silent_share_id) ON DELETE CASCADE,
     FOREIGN KEY (book_id) REFERENCES book(book_id) ON DELETE CASCADE
 );
 
--- 使用者收到分享關聯表
+-- 使用者收到分享關聯表                 
 CREATE TABLE receives (
     user_id INT,
     silent_share_id INT,
