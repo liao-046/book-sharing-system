@@ -46,16 +46,17 @@
 </head>
 <body>
   <div class="container">
-    <h2 class="mb-4">📚 我的書櫃</h2>
-
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="mb-0">📚 我的書櫃</h2>
+      <a href="index.php" class="btn btn-outline-secondary">← 返回首頁</a>
+    </div>
     <div id="shelfList" class="mb-4">
       <div class="text-muted">載入中...</div>
     </div>
 
     <form id="newShelfForm" class="d-flex gap-2">
       <input type="text" class="form-control" id="newShelfName" placeholder="輸入新書櫃名稱" required />
-      <button type="submit" class="btn btn-primary">➕ 新增書櫃</button>
-    </form>
+      <button type="submit" class="btn btn-primary w-auto flex-shrink-0">➕ 新增書櫃</button>
   </div>
 
   <script>
