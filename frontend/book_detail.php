@@ -8,7 +8,7 @@ if (!$book_id) {
   exit;
 }
 
-// 撈書籍資料
+// 撈取書籍詳細資訊
 $stmt = $pdo->prepare("
   SELECT b.book_id, b.title, b.publisher, b.category, b.cover_url, b.description,
          GROUP_CONCAT(a.name SEPARATOR ', ') AS authors
@@ -20,25 +20,31 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$book_id]);
 $book = $stmt->fetch(PDO::FETCH_ASSOC);
-
 if (!$book) {
   echo "找不到這本書";
   exit;
 }
 
-// 撈取評論
+$user_id = $_SESSION['user_id'] ?? null;
+$user_name = $_SESSION['user_name'] ?? null;
+
+// 查詢使用者是否已評論
+$userReview = null;
+if ($user_id) {
+  $stmt = $pdo->prepare("SELECT * FROM review WHERE user_id = ? AND book_id = ?");
+  $stmt->execute([$user_id, $book_id]);
+  $userReview = $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+// 撈取所有評論
 $stmt = $pdo->prepare("
-  SELECT r.rating, r.comment, u.name, r.create_time
-  FROM review r
+  SELECT r.*, u.username FROM review r
   JOIN user u ON r.user_id = u.user_id
   WHERE r.book_id = ?
   ORDER BY r.create_time DESC
 ");
 $stmt->execute([$book_id]);
 $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-$user_id = $_SESSION['user_id'] ?? null;
-$user_name = $_SESSION['user_name'] ?? null;
 ?>
 <!DOCTYPE html>
 <html lang="zh-Hant">
@@ -47,14 +53,9 @@ $user_name = $_SESSION['user_name'] ?? null;
   <title><?= htmlspecialchars($book['title']) ?> - 書籍詳情</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { background-color: #f8f9fa; }
-    .book-cover {
-      width: 100%;
-      max-width: 300px;
-      height: auto;
-      border: 1px solid #ccc;
-      object-fit: cover;
-    }
+    .book-cover { max-width: 280px; border: 1px solid #ccc; }
+    .star { font-size: 1.5rem; color: gold; cursor: pointer; }
+    .review-box { background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 1rem; }
   </style>
 </head>
 <body>
@@ -69,9 +70,9 @@ $user_name = $_SESSION['user_name'] ?? null;
     </div>
   </div>
 
-  <div class="row mb-5">
+  <div class="row mb-4">
     <div class="col-md-4 text-center">
-      <img src="<?= htmlspecialchars($book['cover_url']) ?>" alt="封面" class="book-cover"
+      <img src="<?= htmlspecialchars($book['cover_url']) ?>" class="book-cover"
            onerror="this.src='/book-sharing-system/assets/img/default_cover.png'">
     </div>
     <div class="col-md-8">
@@ -80,75 +81,80 @@ $user_name = $_SESSION['user_name'] ?? null;
       <p><strong>出版社：</strong><?= htmlspecialchars($book['publisher']) ?: '未知' ?></p>
       <p><strong>分類：</strong><?= htmlspecialchars($book['category']) ?: '無' ?></p>
       <hr>
-      <p><strong>內容簡介：</strong></p>
-      <p><?= nl2br(htmlspecialchars($book['description'] ?? '尚無簡介')) ?></p>
+      <p><strong>內容簡介：</strong><br><?= nl2br(htmlspecialchars($book['description'] ?? '尚無簡介')) ?></p>
     </div>
   </div>
 
-  <!-- 留言區 -->
-  <h4 class="mb-3">⭐ 評論與評分</h4>
-
   <?php if ($user_id): ?>
-    <form class="mb-4" id="reviewForm">
-      <div class="mb-2">
-        <label for="rating" class="form-label">評分（1～5）</label>
-        <select class="form-select w-auto" name="rating" id="rating" required>
-          <option value="">請選擇</option>
-          <?php for ($i = 5; $i >= 1; $i--): ?>
-            <option value="<?= $i ?>"><?= $i ?> 分</option>
-          <?php endfor; ?>
-        </select>
-      </div>
-      <div class="mb-2">
-        <label for="comment" class="form-label">留言</label>
-        <textarea class="form-control" id="comment" name="comment" rows="3" placeholder="想說點什麼嗎？"></textarea>
-      </div>
-      <input type="hidden" name="book_id" value="<?= $book['book_id'] ?>">
-      <button type="submit" class="btn btn-primary">送出評論</button>
-    </form>
-  <?php else: ?>
-    <div class="alert alert-warning">請先 <a href="login.html">登入</a> 才能發表評論。</div>
+    <div class="mb-4">
+      <h5>📝 我的評論</h5>
+
+      <?php if ($userReview): ?>
+        <div class="review-box position-relative">
+          <div class="position-absolute top-0 end-0 p-2">
+            <button class="btn btn-sm btn-outline-primary" onclick="toggleEditForm(true)">✏️ 編輯</button>
+          </div>
+          <div id="myReviewDisplay">
+            <div><?= str_repeat('★', $userReview['rating']) . str_repeat('☆', 5 - $userReview['rating']) ?></div>
+            <p class="mb-0"><?= nl2br(htmlspecialchars($userReview['comment'])) ?></p>
+          </div>
+
+          <form id="editForm" style="display:none" method="post" action="../backend/update_review.php">
+            <input type="hidden" name="review_id" value="<?= $userReview['review_id'] ?>">
+            <input type="hidden" name="book_id" value="<?= $book['book_id'] ?>">
+            <div class="mb-2">
+              <div id="editStars"></div>
+              <input type="hidden" name="rating" id="editRating" value="<?= $userReview['rating'] ?>">
+            </div>
+            <textarea name="comment" class="form-control mb-2" rows="3"><?= htmlspecialchars($userReview['comment']) ?></textarea>
+            <button type="submit" class="btn btn-success btn-sm">更新評論</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="toggleEditForm(false)">取消</button>
+          </form>
+        </div>
+      <?php else: ?>
+        <form class="review-box" method="post" action="../backend/add_review.php">
+          <input type="hidden" name="book_id" value="<?= $book['book_id'] ?>">
+          <div class="mb-2">
+            <div id="newStars"></div>
+            <input type="hidden" name="rating" id="newRating" required>
+          </div>
+          <textarea name="comment" class="form-control mb-2" rows="3" placeholder="分享你的看法..."></textarea>
+          <button type="submit" class="btn btn-primary btn-sm">送出評論</button>
+        </form>
+      <?php endif; ?>
+    </div>
   <?php endif; ?>
 
-  <div id="reviewList">
-    <?php if (count($reviews) === 0): ?>
-      <div class="text-muted">尚無任何評論。</div>
-    <?php else: ?>
-      <?php foreach ($reviews as $r): ?>
-        <div class="border rounded p-3 mb-3 bg-white">
-          <div class="d-flex justify-content-between">
-            <strong><?= htmlspecialchars($r['name']) ?></strong>
-            <span class="text-muted small"><?= $r['create_time'] ?></span>
-          </div>
-          <div>⭐ <?= str_repeat('⭐', $r['rating']) ?> (<?= $r['rating'] ?> 分)</div>
-          <?php if ($r['comment']): ?>
-            <div class="mt-2"><?= nl2br(htmlspecialchars($r['comment'])) ?></div>
-          <?php endif; ?>
-        </div>
-      <?php endforeach; ?>
-    <?php endif; ?>
-  </div>
+  <h5>🗣️ 所有評論</h5>
+  <?php foreach ($reviews as $r): ?>
+    <div class="review-box">
+      <strong><?= htmlspecialchars($r['username']) ?></strong> - <?= str_repeat('★', $r['rating']) . str_repeat('☆', 5 - $r['rating']) ?>
+      <p class="mb-0"><?= nl2br(htmlspecialchars($r['comment'])) ?></p>
+    </div>
+  <?php endforeach; ?>
 </div>
 
 <script>
-document.getElementById('reviewForm')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-
-  const res = await fetch('/book-sharing-system/backend/add_review.php', {
-    method: 'POST',
-    body: new URLSearchParams(formData),
-    credentials: 'include'
-  });
-
-  const data = await res.json();
-  if (data.success) {
-    alert("✅ 評論已新增！");
-    location.reload();
-  } else {
-    alert("❌ " + (data.message || "新增失敗"));
+function renderStars(containerId, inputId, current) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const span = document.createElement('span');
+    span.textContent = i <= current ? '★' : '☆';
+    span.className = 'star';
+    span.onclick = () => {
+      document.getElementById(inputId).value = i;
+      renderStars(containerId, inputId, i);
+    };
+    container.appendChild(span);
   }
-});
+}
+function toggleEditForm(show) {
+  document.getElementById('myReviewDisplay').style.display = show ? 'none' : 'block';
+  document.getElementById('editForm').style.display = show ? 'block' : 'none';
+}
+renderStars('newStars', 'newRating', 0);
+renderStars('editStars', 'editRating', <?= $userReview['rating'] ?? 0 ?>);
 </script>
 </body>
 </html>

@@ -1,62 +1,31 @@
 <?php
+session_start();
 require_once 'db.php';
 
+header('Content-Type: application/json');
+
+$user_id = $_SESSION['user_id'] ?? null;
 $book_id = $_POST['book_id'] ?? null;
-$field = $_POST['field'] ?? '';
-$value = trim($_POST['value'] ?? '');
+$rating = $_POST['rating'] ?? null;
+$comment = trim($_POST['comment'] ?? '');
 
-$allowed = ['title', 'publisher', 'category', 'description', 'authors', 'cover_url'];
-if (!in_array($field, $allowed) || !$book_id) {
-    echo "非法操作"; exit;
+if (!$user_id || !$book_id || !$rating) {
+  echo json_encode(['success' => false, 'message' => '缺少必要資訊']);
+  exit;
 }
 
-try {
-    if ($field === 'authors') {
-        // 多對多關聯處理
-        $authorNames = array_filter(array_map('trim', explode(',', $value)));
-        $authorIds = [];
+// 確認這筆評論屬於該使用者
+$stmt = $pdo->prepare("SELECT review_id FROM review WHERE user_id = ? AND book_id = ?");
+$stmt->execute([$user_id, $book_id]);
+$review = $stmt->fetch();
 
-        foreach ($authorNames as $name) {
-            // 檢查是否已有此作者
-            $stmt = $pdo->prepare("SELECT author_id FROM author WHERE name = ?");
-            $stmt->execute([$name]);
-            $author = $stmt->fetch();
-
-            if ($author) {
-                $authorIds[] = $author['author_id'];
-            } else {
-                // 若無，嘗試插入（避免 UNIQUE constraint 錯誤）
-                $stmt = $pdo->prepare("INSERT IGNORE INTO author (name) VALUES (?)");
-                $stmt->execute([$name]);
-
-                // 再查一次拿 ID（因為 INSERT IGNORE 不一定插入）
-                $stmt = $pdo->prepare("SELECT author_id FROM author WHERE name = ?");
-                $stmt->execute([$name]);
-                $newAuthor = $stmt->fetch();
-                if ($newAuthor) {
-                    $authorIds[] = $newAuthor['author_id'];
-                }
-            }
-        }
-
-        // 清除原關聯
-        $stmt = $pdo->prepare("DELETE FROM book_author WHERE book_id = ?");
-        $stmt->execute([$book_id]);
-
-        // 新增關聯
-        foreach ($authorIds as $aid) {
-            $stmt = $pdo->prepare("INSERT INTO book_author (book_id, author_id) VALUES (?, ?)");
-            $stmt->execute([$book_id, $aid]);
-        }
-
-        echo "OK";
-
-    } else {
-        // 其他欄位更新
-        $stmt = $pdo->prepare("UPDATE book SET `$field` = ? WHERE book_id = ?");
-        $stmt->execute([$value, $book_id]);
-        echo "OK";
-    }
-} catch (PDOException $e) {
-    echo "錯誤：" . $e->getMessage();
+if (!$review) {
+  echo json_encode(['success' => false, 'message' => '找不到可修改的評論']);
+  exit;
 }
+
+// 執行更新
+$stmt = $pdo->prepare("UPDATE review SET rating = ?, comment = ? WHERE user_id = ? AND book_id = ?");
+$success = $stmt->execute([$rating, $comment, $user_id, $book_id]);
+
+echo json_encode(['success' => $success]);
