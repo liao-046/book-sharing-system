@@ -53,6 +53,13 @@ if ($user_id) {
       object-fit: cover;
       border-bottom: 1px solid #ddd;
     }
+    button.btn-success[onclick]:hover::after {
+    content: "（點擊可加入其他書櫃）";
+    display: block;
+    font-size: 0.75rem;
+    color:rgb(205, 249, 205);
+    margin-top: 4px;
+    }
   </style>
 </head>
 <body>
@@ -77,20 +84,27 @@ if ($user_id) {
     <?php foreach ($books as $book): ?>
       <div class="col">
         <div class="card book-card shadow-sm">
-          <img src="<?= htmlspecialchars($book['cover_url']) ?>" alt="封面" class="book-cover">
+          <img src="<?= htmlspecialchars($book['cover_url']) ?>" alt="封面" class="book-cover"
+               onerror="this.src='/book-sharing-system/assets/img/default_cover.png'">
           <div class="card-body">
             <h5 class="card-title"><?= htmlspecialchars($book['title']) ?></h5>
             <p class="card-text mb-1"><strong>作者：</strong><?= htmlspecialchars($book['authors']) ?: '未知' ?></p>
             <p class="card-text mb-1"><strong>出版社：</strong><?= htmlspecialchars($book['publisher']) ?: '未知' ?></p>
             <p class="card-text mb-2"><strong>分類：</strong><?= htmlspecialchars($book['category']) ?: '無' ?></p>
             <div class="d-grid gap-1">
-              <?php if ($user_id && in_array($book['book_id'], $addedBookIds)): ?>
-                <button class="btn btn-success btn-sm" disabled>✔ 已加入書櫃</button>
-              <?php else: ?>
-                <button class="btn btn-outline-primary btn-sm" onclick="showShelfSelector(<?= $book['book_id'] ?>, this)">➕ 加入書櫃</button>
-              <?php endif; ?>
-              <a href="/book-sharing-system/frontend/book_detail.php?book_id=<?= $book['book_id'] ?>" class="btn btn-info btn-sm">🔍 查看詳情</a>
-            </div>
+  <?php if ($user_id): ?>
+    <?php if (in_array($book['book_id'], $addedBookIds)): ?>
+      <button class="btn btn-success btn-sm" onclick="addToShelfModal(<?= $book['book_id'] ?>, this)">
+        ✔ 已加入書櫃
+      </button>
+    <?php else: ?>
+      <button class="btn btn-outline-primary btn-sm" onclick="addToShelfModal(<?= $book['book_id'] ?>, this)">
+        ➕ 加入書櫃
+      </button>
+    <?php endif; ?>
+  <?php endif; ?>
+  <a href="/book-sharing-system/frontend/book_detail.php?book_id=<?= $book['book_id'] ?>" class="btn btn-info btn-sm">🔍 查看詳情</a>
+</div>
           </div>
         </div>
       </div>
@@ -101,10 +115,11 @@ if ($user_id) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 let currentBookId = null;
+let currentButton = null;
 
-// 顯示書櫃選擇 modal
-function addToShelfModal(bookId) {
+function addToShelfModal(bookId, btn = null) {
   currentBookId = bookId;
+  currentButton = btn;
 
   fetch('/book-sharing-system/backend/get_shelves.php', {
     credentials: 'include'
@@ -123,20 +138,28 @@ function addToShelfModal(bookId) {
     noShelfMessage.style.display = 'none';
 
     data.shelves.forEach(shelf => {
-      const btn = document.createElement('button');
-      btn.className = 'list-group-item list-group-item-action';
-      btn.textContent = shelf.name;
-      btn.onclick = () => addBookToShelf(shelf.shelf_id);
-      shelfOptions.appendChild(btn);
-    });
+    const btn = document.createElement('button');
+    btn.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+    btn.textContent = shelf.name;
 
+  if (shelf.already_added) {
+    btn.classList.add('disabled', 'text-secondary');
+    const badge = document.createElement('span');
+    badge.className = 'badge bg-success rounded-pill';
+    badge.textContent = '✔ 已加入';
+    btn.appendChild(badge);
+  } else {
+    btn.onclick = () => addBookToShelf(shelf.shelf_id);
+  }
+
+  shelfOptions.appendChild(btn);
+});
     const modal = new bootstrap.Modal(document.getElementById('addToShelfModal'));
     modal.show();
   })
   .catch(() => alert('無法載入書櫃列表，請稍後再試'));
 }
 
-// 發送加入書櫃請求
 function addBookToShelf(shelfId) {
   if (!currentBookId) return;
 
@@ -155,6 +178,12 @@ function addBookToShelf(shelfId) {
       alert('✅ 書籍已成功加入書櫃');
       const modal = bootstrap.Modal.getInstance(document.getElementById('addToShelfModal'));
       modal.hide();
+
+      if (currentButton) {
+        currentButton.className = 'btn btn-success btn-sm';
+        currentButton.textContent = '✔ 已加入書櫃';
+        currentButton.disabled = true;
+      }
     } else {
       alert('❌ ' + data.message);
     }
@@ -162,7 +191,7 @@ function addBookToShelf(shelfId) {
   .catch(() => alert('加入失敗，請稍後再試'));
 }
 </script>
-</body>
+
 <!-- 書櫃選擇 Modal -->
 <div class="modal fade" id="addToShelfModal" tabindex="-1" aria-labelledby="addToShelfModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -183,4 +212,5 @@ function addBookToShelf(shelfId) {
   </div>
 </div>
 
+</body>
 </html>

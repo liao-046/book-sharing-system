@@ -1,40 +1,36 @@
 <?php
 session_start();
 require_once 'db.php';
-header('Content-Type: application/json');
 
 $user_id = $_SESSION['user_id'] ?? null;
-$shelf_id = $_POST['shelf_id'] ?? null;
 $book_id = $_POST['book_id'] ?? null;
+$shelf_id = $_POST['shelf_id'] ?? null;
 
-if (!$user_id) {
-  echo json_encode(['success' => false, 'message' => '請先登入']);
+if (!$user_id || !$book_id || !$shelf_id) {
+  echo json_encode(['success' => false, 'message' => '參數不完整或未登入']);
   exit;
 }
 
-if (!$shelf_id || !$book_id) {
-  echo json_encode(['success' => false, 'message' => '缺少 shelf_id 或 book_id']);
-  exit;
-}
-
-// 檢查該書櫃是否屬於使用者
-$stmt = $pdo->prepare("SELECT 1 FROM book_shelf WHERE shelf_id = ? AND user_id = ?");
+// 檢查這個書櫃是否屬於該使用者
+$stmt = $pdo->prepare("SELECT * FROM book_shelf WHERE shelf_id = ? AND user_id = ?");
 $stmt->execute([$shelf_id, $user_id]);
-if (!$stmt->fetch()) {
-  echo json_encode(['success' => false, 'message' => '書櫃不屬於你']);
+if ($stmt->rowCount() === 0) {
+  echo json_encode(['success' => false, 'message' => '無效的書櫃或權限不足']);
   exit;
 }
 
-// 檢查是否已經加入
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM bookshelf_record WHERE shelf_id = ? AND book_id = ?");
+// 檢查是否已經加入過該書櫃
+$stmt = $pdo->prepare("SELECT 1 FROM bookshelf_record WHERE shelf_id = ? AND book_id = ?");
 $stmt->execute([$shelf_id, $book_id]);
-if ($stmt->fetchColumn() > 0) {
-  echo json_encode(['success' => false, 'message' => '書籍已在書櫃中']);
+if ($stmt->fetch()) {
+  echo json_encode(['success' => false, 'message' => '這本書已經在這個書櫃中了']);
   exit;
 }
 
-// 加入書櫃
-$stmt = $pdo->prepare("INSERT INTO bookshelf_record (shelf_id, book_id, add_time) VALUES (?, ?, NOW())");
-$stmt->execute([$shelf_id, $book_id]);
-
-echo json_encode(['success' => true]);
+// 新增紀錄
+$stmt = $pdo->prepare("INSERT INTO bookshelf_record (shelf_id, book_id) VALUES (?, ?)");
+if ($stmt->execute([$shelf_id, $book_id])) {
+  echo json_encode(['success' => true]);
+} else {
+  echo json_encode(['success' => false, 'message' => '加入失敗，請稍後再試']);
+}
