@@ -243,8 +243,21 @@ function editReview() {
   alert('請先刪除原評論再新增（可改為完整的編輯 UI）');
 }
 
-window.onload = loadReviews;
+//window.onload = loadReviews;
+window.onload = function () {
+  loadReviews();
 
+  // 🔔 檢查是否有剛解鎖的靜音分享
+  fetch("/book-sharing-system/backend/check_unlock_shares.php")
+    .then(res => res.text())
+    .then(text => {
+      if (text.trim() === "none") return;
+
+      alert(text);  // 🔔 顯示訊息（你可以改用 modal 或 toast）
+    });
+};
+
+  
 function openSilentShareModal() {
   const modal = new bootstrap.Modal(document.getElementById('silentShareModal'));
   modal.show();
