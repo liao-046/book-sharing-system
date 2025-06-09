@@ -6,3 +6,4 @@ password = Wy$Kq83Nbm
 
  # 各個php用圖
  
+sudo systemctl start mysql

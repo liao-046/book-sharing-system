@@ -9,9 +9,9 @@ if (!$book_id) {
   exit;
 }
 
-// 撈取書籍詳細資訊
+// 撈取書籍詳細資訊（含簡介）
 $stmt = $pdo->prepare("
-  SELECT b.book_id, b.title, b.publisher, b.category, b.cover_url,
+  SELECT b.book_id, b.title, b.publisher, b.category, b.cover_url, b.description,
          GROUP_CONCAT(a.name SEPARATOR ', ') AS authors
   FROM book b
   LEFT JOIN book_author ba ON b.book_id = ba.book_id
@@ -51,7 +51,7 @@ $user_name = $_SESSION['user_name'] ?? null;
   <div class="mb-4 d-flex justify-content-between align-items-center">
     <h2>📖 書籍詳情</h2>
     <div>
-      <a href="browse_books.php" class="btn btn-secondary btn-sm">← 返回瀏覽</a>
+      <a href="index.php" class="btn btn-secondary btn-sm">← 返回瀏覽</a>
       <?php if ($user_name): ?>
         <span class="ms-2">👋 <?= htmlspecialchars($user_name) ?></span>
       <?php endif; ?>
@@ -68,7 +68,9 @@ $user_name = $_SESSION['user_name'] ?? null;
       <p><strong>作者：</strong><?= htmlspecialchars($book['authors']) ?: '未知' ?></p>
       <p><strong>出版社：</strong><?= htmlspecialchars($book['publisher']) ?: '未知' ?></p>
       <p><strong>分類：</strong><?= htmlspecialchars($book['category']) ?: '無' ?></p>
-      <!-- 你可以擴充更多資訊欄位，例如簡介、出版年等 -->
+      <hr>
+      <p><strong>內容簡介：</strong></p>
+      <p><?= nl2br(htmlspecialchars($book['description'] ?? '尚無簡介')) ?></p>
     </div>
   </div>
 </div>
