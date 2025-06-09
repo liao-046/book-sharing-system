@@ -6,10 +6,6 @@ if (session_status() === PHP_SESSION_NONE) {
 header('Content-Type: application/json');
 
 
-// 驗證是否為管理者
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 $user_id = $_SESSION['user_id'] ?? null;
 if (!$user_id) {
     echo json_encode(['success' => false, 'message' => '未登入']);

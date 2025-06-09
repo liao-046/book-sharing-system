@@ -13,7 +13,7 @@
     }
 
     header {
-      background: #333;
+      background: #969696;
       color: white;
       padding: 15px 20px;
       display: flex;
@@ -126,23 +126,24 @@
 </head>
 <body>
 
-<header>
-  <h1>
-    <?php if ($is_logged_in): ?>
-      歡迎，<?= $user_name ?>！
-    <?php else: ?>
-      書櫃分享系統
-    <?php endif; ?>
-  </h1>
-  <div class="actions">
-    <?php if (!$is_logged_in): ?>
-      <button class="login-btn" onclick="location.href='/book-sharing-system/frontend/login.html'">登入</button>
-    <?php else: ?>
-      <button class="logout-btn" onclick="location.href='/book-sharing-system/backend/logout.php'">登出</button>
-      <button class="bookshelf-btn" onclick="location.href='/book-sharing-system/frontend/bookshelf_list.html'">我的書櫃</button>
-    <?php endif; ?>
-  </div>
-</header>
+  <header>
+    <h1>
+      <?php if ($is_logged_in): ?>
+        歡迎，<?= $user_name ?>
+      <?php else: ?>
+        管理者
+      <?php endif; ?>
+    </h1>
+    <div class="actions">
+      <?php if (!$is_logged_in): ?>
+        <button class="login-btn" onclick="location.href='/book-sharing-system/frontend/login.html'">登入</button>
+      <?php else: ?>
+        <button class="logout-btn" onclick="location.href='/book-sharing-system/backend/logout.php'">登出</button>
+        <button class="bookshelf-btn" onclick="location.href='/book-sharing-system/frontend/index.html'">首頁</button>
+      <?php endif; ?>
+    </div>
+  </header>
+  
 
 <div class="container">
   <h2>新增書籍（支援多位作者）</h2>

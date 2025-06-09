@@ -67,7 +67,6 @@ $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
       <thead class="table-light">
         <tr>
           <th><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
-          <th>#</th>
           <th>書名</th>
           <th>作者</th>
           <th>操作</th>
@@ -77,7 +76,6 @@ $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <?php foreach ($books as $i => $book): ?>
           <tr data-id="<?= $book['book_id'] ?>">
             <td><input type="checkbox" name="delete_ids[]" value="<?= $book['book_id'] ?>"></td>
-            <td><?= $i + 1 ?></td>
             <td ondblclick="makeEditable(this, 'title', <?= $book['book_id'] ?>)"><?= htmlspecialchars($book['title']) ?: '（點此編輯）' ?></td>
             <td ondblclick="makeEditable(this, 'authors', <?= $book['book_id'] ?>)"><?= htmlspecialchars($book['authors']) ?: '（點此編輯）' ?></td>
             <td><button type="button" class="btn btn-sm btn-info" onclick="showDetail(<?= $book['book_id'] ?>)">查看</button></td>
