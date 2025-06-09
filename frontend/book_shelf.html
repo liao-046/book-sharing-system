@@ -91,29 +91,25 @@
       max-width: 300px;
       margin-top: 10px;
     }
+
+    #backButton img:hover {
+      opacity: 1.0;
+    }
   </style>
 </head>
 <body>
 
 <!-- 背景橫幅 -->
 <div id="backgroundArea" class="header-banner">
-  <!-- 放在 header-banner 最前面 -->
+  <!-- 返回按鈕（使用圖片） -->
   <a href="/book-sharing-system/frontend/index.php"
-  id="backButton"
-  class="position-absolute top-0 start-0 m-3 d-flex align-items-center justify-content-center"
-  style="
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(4px);
-    text-decoration: none;
-    font-size: 18px;
-    color: white;
-    z-index: 3;
-    transition: background-color 0.2s ease;"> ⬅
-</a>
-
+     id="backButton"
+     class="position-absolute top-0 start-0 m-3"
+     style="z-index: 34;">
+    <img src="/book-sharing-system/assets/img/12260_color.png"
+         alt="返回"
+         style="width: 45px; height: 45px; border-radius: 50%; opacity: 0.8; transition: opacity 0.2s;">
+  </a>
 
   <div class="header-overlay"></div>
   <div class="header-content">
@@ -141,14 +137,13 @@
     location.href = 'index.html';
   }
 
-  // 點 emoji 圖示彈出 emoji picker
+  // 點 emoji 彈出 picker
   document.getElementById('shelfIcon').addEventListener('click', (e) => {
     e.stopPropagation();
     const picker = document.getElementById('emojiPicker');
     picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
   });
 
-  // 點 emoji 更新 icon
   document.getElementById('emojiPicker').addEventListener('emoji-click', event => {
     const emoji = event.detail.unicode;
     document.getElementById('shelfIcon').textContent = emoji;
@@ -168,7 +163,6 @@
       .catch(() => alert('無法更新 icon'));
   });
 
-  // 點其他地方關閉 emoji picker
   document.addEventListener('click', (e) => {
     const picker = document.getElementById('emojiPicker');
     const icon = document.getElementById('shelfIcon');
@@ -177,10 +171,9 @@
     }
   });
 
-  // 點背景橫幅可更換圖片
+  // 背景區點擊 => 啟動更新提示（排除子元素）
   document.getElementById('backgroundArea').addEventListener('click', (e) => {
-     // 若使用者點的是子元素（如按鈕），則不執行換背景
-    if (e.target !== e.currentTarget) return;
+    if (e.target !== e.currentTarget) return;  // 避免點到子元素觸發
     const newUrl = prompt('輸入新的背景圖片網址：');
     if (newUrl && newUrl.trim()) {
       updateBackground(newUrl.trim());
