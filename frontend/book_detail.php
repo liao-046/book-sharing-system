@@ -3,12 +3,12 @@ session_start();
 require_once '../backend/db.php';
 
 $book_id = $_GET['book_id'] ?? null;
+
 if (!$book_id) {
   echo "錯誤：未提供書籍 ID";
   exit;
 }
 
-// 撈書籍資料
 $stmt = $pdo->prepare("
   SELECT b.book_id, b.title, b.publisher, b.category, b.cover_url, b.description,
          GROUP_CONCAT(a.name SEPARATOR ', ') AS authors
@@ -25,17 +25,6 @@ if (!$book) {
   echo "找不到這本書";
   exit;
 }
-
-// 撈取評論
-$stmt = $pdo->prepare("
-  SELECT r.rating, r.comment, u.name, r.create_time
-  FROM review r
-  JOIN user u ON r.user_id = u.user_id
-  WHERE r.book_id = ?
-  ORDER BY r.create_time DESC
-");
-$stmt->execute([$book_id]);
-$reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $user_id = $_SESSION['user_id'] ?? null;
 $user_name = $_SESSION['user_name'] ?? null;
@@ -55,6 +44,8 @@ $user_name = $_SESSION['user_name'] ?? null;
       border: 1px solid #ccc;
       object-fit: cover;
     }
+    .star { font-size: 1.5rem; color: gold; cursor: pointer; }
+    .star:hover, .star:hover ~ .star { color: orange; }
   </style>
 </head>
 <body>
@@ -69,7 +60,7 @@ $user_name = $_SESSION['user_name'] ?? null;
     </div>
   </div>
 
-  <div class="row mb-5">
+  <div class="row">
     <div class="col-md-4 text-center">
       <img src="<?= htmlspecialchars($book['cover_url']) ?>" alt="封面" class="book-cover"
            onerror="this.src='/book-sharing-system/assets/img/default_cover.png'">
@@ -85,70 +76,141 @@ $user_name = $_SESSION['user_name'] ?? null;
     </div>
   </div>
 
-  <!-- 留言區 -->
-  <h4 class="mb-3">⭐ 評論與評分</h4>
-
-  <?php if ($user_id): ?>
-    <form class="mb-4" id="reviewForm">
-      <div class="mb-2">
-        <label for="rating" class="form-label">評分（1～5）</label>
-        <select class="form-select w-auto" name="rating" id="rating" required>
-          <option value="">請選擇</option>
-          <?php for ($i = 5; $i >= 1; $i--): ?>
-            <option value="<?= $i ?>"><?= $i ?> 分</option>
-          <?php endfor; ?>
-        </select>
-      </div>
-      <div class="mb-2">
-        <label for="comment" class="form-label">留言</label>
-        <textarea class="form-control" id="comment" name="comment" rows="3" placeholder="想說點什麼嗎？"></textarea>
-      </div>
-      <input type="hidden" name="book_id" value="<?= $book['book_id'] ?>">
-      <button type="submit" class="btn btn-primary">送出評論</button>
-    </form>
-  <?php else: ?>
-    <div class="alert alert-warning">請先 <a href="login.html">登入</a> 才能發表評論。</div>
-  <?php endif; ?>
-
-  <div id="reviewList">
-    <?php if (count($reviews) === 0): ?>
-      <div class="text-muted">尚無任何評論。</div>
-    <?php else: ?>
-      <?php foreach ($reviews as $r): ?>
-        <div class="border rounded p-3 mb-3 bg-white">
-          <div class="d-flex justify-content-between">
-            <strong><?= htmlspecialchars($r['name']) ?></strong>
-            <span class="text-muted small"><?= $r['create_time'] ?></span>
-          </div>
-          <div>⭐ <?= str_repeat('⭐', $r['rating']) ?> (<?= $r['rating'] ?> 分)</div>
-          <?php if ($r['comment']): ?>
-            <div class="mt-2"><?= nl2br(htmlspecialchars($r['comment'])) ?></div>
-          <?php endif; ?>
-        </div>
-      <?php endforeach; ?>
-    <?php endif; ?>
-  </div>
+  <!-- 評論區 -->
+  <hr>
+  <h5 class="mt-4">📢 書籍評論</h5>
+  <div id="myReviewSection" class="mb-4"></div>
+  <div id="otherReviewsSection"></div>
 </div>
 
 <script>
-document.getElementById('reviewForm')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
+const bookId = <?= json_encode($book_id) ?>;
 
-  const res = await fetch('/book-sharing-system/backend/add_review.php', {
-    method: 'POST',
-    body: new URLSearchParams(formData),
-    credentials: 'include'
+function loadReviews() {
+  fetch(`/book-sharing-system/backend/get_review.php?book_id=${bookId}`)
+    .then(res => res.json())
+    .then(data => {
+      const myReviewSection = document.getElementById('myReviewSection');
+      const otherReviewsSection = document.getElementById('otherReviewsSection');
+      myReviewSection.innerHTML = '';
+      otherReviewsSection.innerHTML = '';
+
+      if (!data.success || !data.reviews) return;
+
+      const userId = <?= json_encode($user_id) ?>;
+      let myReview = data.reviews.find(r => r.user_id == userId);
+
+      if (myReview) {
+        myReviewSection.innerHTML = `
+          <div class="border rounded p-3 bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+              <h6>我的評論</h6>
+              <div>
+                <button class="btn btn-sm btn-outline-primary me-2" onclick="editReview()">✏️ 編輯</button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteReview()">🗑️ 刪除</button>
+              </div>
+            </div>
+            <div class="text-warning my-2">${renderStars(myReview.rating)}</div>
+            <p class="mb-0">${myReview.comment || '（無內容）'}</p>
+          </div>
+        `;
+      } else {
+        myReviewSection.innerHTML = `
+          <div class="border p-3 rounded">
+            <h6 class="mb-2">新增評論</h6>
+            <div id="starForm" class="mb-2 text-warning">${renderStarInput(0)}</div>
+            <textarea id="commentInput" class="form-control mb-2" rows="3" placeholder="輸入評論內容（可留空）"></textarea>
+            <button class="btn btn-primary btn-sm" onclick="submitReview()">送出</button>
+          </div>
+        `;
+        addStarInputEvents();
+      }
+
+      data.reviews
+        .filter(r => r.user_id != userId)
+        .forEach(r => {
+          const div = document.createElement('div');
+          div.className = 'border-bottom py-2';
+          div.innerHTML = `
+            <strong>${r.user_name}</strong>：
+            <span class="text-warning">${renderStars(r.rating)}</span><br>
+            <small class="text-muted">${r.create_time}</small><br>
+            ${r.comment ? `<p class="mb-1">${r.comment}</p>` : ''}
+          `;
+          otherReviewsSection.appendChild(div);
+        });
+    });
+}
+
+function renderStars(score) {
+  return '★'.repeat(score) + '☆'.repeat(5 - score);
+}
+
+function renderStarInput(score) {
+  return Array.from({ length: 5 }, (_, i) =>
+    `<span class="star" data-score="${i + 1}">${i < score ? '★' : '☆'}</span>`
+  ).join('');
+}
+
+function addStarInputEvents() {
+  document.querySelectorAll('#starForm .star').forEach(star => {
+    star.onclick = () => {
+      const score = parseInt(star.dataset.score);
+      document.getElementById('starForm').innerHTML = renderStarInput(score);
+      document.getElementById('starForm').dataset.score = score;
+      addStarInputEvents();
+    };
   });
+}
 
-  const data = await res.json();
-  if (data.success) {
-    alert("✅ 評論已新增！");
-    location.reload();
-  } else {
-    alert("❌ " + (data.message || "新增失敗"));
-  }
-});
+function submitReview() {
+  const rating = parseInt(document.getElementById('starForm').dataset.score || 0);
+  const comment = document.getElementById('commentInput').value.trim();
+  if (!rating) return alert('請點選星星評分');
+
+  fetch('/book-sharing-system/backend/add_review.php', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ book_id: bookId, rating, comment })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert('✅ 評論成功');
+      loadReviews();
+    } else {
+      alert('❌ ' + data.message);
+    }
+  });
+}
+
+function deleteReview() {
+  if (!confirm('確定刪除評論？')) return;
+
+  fetch('/book-sharing-system/backend/delete_review.php', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ book_id: bookId })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert('已刪除');
+      loadReviews();
+    } else {
+      alert('❌ 無法刪除');
+    }
+  });
+}
+
+function editReview() {
+  // 同 submitReview，可擴充為可編輯介面（略）
+  alert('請先刪除原評論再新增（可改為完整的編輯 UI）');
+}
+
+window.onload = loadReviews;
 </script>
 </body>
 </html>

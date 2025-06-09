@@ -2,31 +2,25 @@
 session_start();
 require_once 'db.php';
 
-header('Content-Type: application/json');
-
-// 驗證登入
 $user_id = $_SESSION['user_id'] ?? null;
-if (!$user_id) {
-  echo json_encode(['success' => false, 'message' => '請先登入']);
-  exit;
-}
-
-// 接收輸入
 $book_id = $_POST['book_id'] ?? null;
 $rating = $_POST['rating'] ?? null;
 $comment = trim($_POST['comment'] ?? '');
 
-if (!$book_id || !$rating || $rating < 1 || $rating > 5) {
-  echo json_encode(['success' => false, 'message' => '請提供有效的評分 (1~5 分) 與書籍 ID']);
+if (!$user_id || !$book_id || !$rating) {
+  echo json_encode(['success' => false, 'message' => '缺少必要欄位']);
   exit;
 }
 
-// 插入資料
-$stmt = $pdo->prepare("INSERT INTO review (user_id, book_id, rating, comment) VALUES (?, ?, ?, ?)");
-$success = $stmt->execute([$user_id, $book_id, $rating, $comment]);
-
-if ($success) {
-  echo json_encode(['success' => true]);
-} else {
-  echo json_encode(['success' => false, 'message' => '評論新增失敗']);
+// 檢查是否已評論過
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM review WHERE user_id = ? AND book_id = ?");
+$stmt->execute([$user_id, $book_id]);
+if ($stmt->fetchColumn() > 0) {
+  echo json_encode(['success' => false, 'message' => '你已對此書籍評論過']);
+  exit;
 }
+
+// 插入
+$stmt = $pdo->prepare("INSERT INTO review (user_id, book_id, rating, comment) VALUES (?, ?, ?, ?)");
+$stmt->execute([$user_id, $book_id, $rating, $comment]);
+echo json_encode(['success' => true]);
