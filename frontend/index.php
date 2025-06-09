@@ -76,6 +76,7 @@ if ($user_id) {
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
+<script src="/book-sharing-system/assets/js/silent_share_alert.js"></script>
   <meta charset="UTF-8">
   <title>書籍瀏覽</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -113,14 +114,18 @@ if ($user_id) {
       書籍瀏覽
     </h2>
     <div>
-      <?php if ($user_name): ?>
-        <img src="<?= htmlspecialchars($avatar_url) ?>" alt="頭像" class="avatar-small">
-        👋 歡迎，<a href="/book-sharing-system/frontend/edit_profile.php" class="text-decoration-none"><?= htmlspecialchars($user_name) ?></a>
-        <a href="/book-sharing-system/frontend/book_shelf_list.html" class="btn btn-outline-success btn-sm ms-2">📚 我的書櫃</a>
-        <a href="/book-sharing-system/backend/logout.php" class="btn btn-outline-secondary btn-sm ms-2">登出</a>
-      <?php else: ?>
-        <a href="/book-sharing-system/frontend/login.html" class="btn btn-primary">登入</a>
-      <?php endif; ?>
+    <?php if ($user_name): ?>
+  <img src="<?= htmlspecialchars($avatar_url) ?>" alt="頭像" class="avatar-small">
+  👋 歡迎，<a href="/book-sharing-system/frontend/edit_profile.php" class="text-decoration-none"><?= htmlspecialchars($user_name) ?></a>
+  
+  <a href="/book-sharing-system/frontend/book_shelf_list.html" class="btn btn-outline-success btn-sm ms-2">📚 我的書櫃</a>
+  <a href="/book-sharing-system/frontend/my_shared_books.php" class="btn btn-outline-dark btn-sm ms-2">📤 我的分享</a>
+  <a href="/book-sharing-system/frontend/notifications.php" class="btn btn-warning btn-sm ms-2">🔔 通知中心</a>
+  <a href="/book-sharing-system/backend/logout.php" class="btn btn-outline-secondary btn-sm ms-2">登出</a>
+<?php else: ?>
+  <a href="/book-sharing-system/frontend/login.html" class="btn btn-primary">登入</a>
+<?php endif; ?>
+
     </div>
   </div>
 
@@ -199,3 +204,53 @@ if ($user_id) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+<!-- 通知按鈕 -->
+<button class="btn btn-warning btn-sm" onclick="loadNotifications()">🔔 通知</button>
+
+<!-- 通知 Modal -->
+<div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="notificationModalLabel">🔔 我的通知</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-group" id="notificationList">
+          <li class="list-group-item text-muted">正在載入通知...</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function loadNotifications() {
+  fetch('/book-sharing-system/backend/notifications.php', { credentials: 'include' })
+    .then(res => res.json())
+    .then(data => {
+      const list = document.getElementById('notificationList');
+      list.innerHTML = '';
+
+      if (!data.success || data.notifications.length === 0) {
+        list.innerHTML = '<li class="list-group-item text-muted">目前沒有通知</li>';
+        return;
+      }
+
+      data.notifications.forEach(n => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = `
+          <div>${n.message}</div>
+          <div class="text-muted small">${n.create_time}</div>
+        `;
+        list.appendChild(li);
+      });
+
+      const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
+      modal.show();
+    })
+    .catch(() => alert("❌ 無法載入通知"));
+}
+</script>

@@ -45,6 +45,7 @@ $shares = $stmt->fetchAll(PDO::FETCH_ASSOC);
           </a><br>
           <strong>分享給：</strong> <?= htmlspecialchars($s['recipient_name']) ?><br>
           <strong>留言：</strong> <?= nl2br(htmlspecialchars($s['message'])) ?><br>
+          <strong>解鎖時間：</strong> <?= htmlspecialchars($s['unlock_time']) ?><br>
           <strong>狀態：</strong>
           <?php if ($s['unlocked']): ?>
             ✅ 已解鎖
