@@ -4,6 +4,12 @@ require_once '../backend/db.php';
 
 $user_id = $_SESSION['user_id'] ?? null;
 $user_name = $_SESSION['user_name'] ?? null;
+$myShelves = [];
+if ($user_id) {
+    $stmt = $pdo->prepare("SELECT shelf_id, name FROM book_shelf WHERE user_id = ?");
+    $stmt->execute([$user_id]);
+    $myShelves = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 // 取得使用者頭像
 if ($user_id) {
@@ -59,6 +65,28 @@ $sql = "
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// 取得使用者的書櫃
+$myShelves = [];
+$joinedShelfMap = [];
+
+if ($user_id) {
+    // 所有書櫃
+    $stmt = $pdo->prepare("SELECT shelf_id, name FROM book_shelf WHERE user_id = ?");
+    $stmt->execute([$user_id]);
+    $myShelves = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // 每本書加入過的書櫃
+    $stmt = $pdo->prepare("
+        SELECT br.book_id, br.shelf_id
+        FROM bookshelf_record br
+        JOIN book_shelf bs ON br.shelf_id = bs.shelf_id
+        WHERE bs.user_id = ?
+    ");
+    $stmt->execute([$user_id]);
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $joinedShelfMap[$row['book_id']][] = $row['shelf_id'];
+    }
+}
 
 // 已加入書櫃的書籍 ID
 $addedBookIds = [];
@@ -72,6 +100,20 @@ if ($user_id) {
     $stmt->execute([$user_id]);
     $addedBookIds = array_column($stmt->fetchAll(), 'book_id');
 }
+$joinedShelfMap = [];
+if ($user_id) {
+    $stmt = $pdo->prepare("
+        SELECT br.book_id, br.shelf_id
+        FROM bookshelf_record br
+        JOIN book_shelf bs ON br.shelf_id = bs.shelf_id
+        WHERE bs.user_id = ?
+    ");
+    $stmt->execute([$user_id]);
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $joinedShelfMap[$row['book_id']][] = $row['shelf_id'];
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="zh-Hant">
@@ -197,11 +239,113 @@ if ($user_id) {
     <?php endforeach; ?>
   </div>
 </div>
+<!-- Modal for selecting shelf -->
+<div class="modal fade" id="addToShelfModal" tabindex="-1" aria-labelledby="addToShelfModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addToShelfModalLabel">選擇要加入的書櫃</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+      </div>
+      <div class="modal-body">
+        <div class="list-group" id="shelfOptions"></div>
+        <div id="noShelfMessage" class="text-center text-muted my-3" style="display:none;">
+          你尚未有任何書櫃，請先建立書櫃。
+          <br>
+          <a href="/book-sharing-system/frontend/book_shelf_list.html" class="btn btn-outline-primary mt-2">建立書櫃</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-<!-- 書櫃 Modal（略） -->
-<!-- 加入書櫃的 JS 函式（略） -->
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+let currentBookId = null;
+let currentButton = null;
+
+function addToShelfModal(bookId, btn = null) {
+  currentBookId = bookId;
+  currentButton = btn;
+
+  fetch(`/book-sharing-system/backend/get_shelves.php?book_id=${bookId}`, {
+    credentials: 'include'
+  })
+  .then(res => res.json())
+  .then(data => {
+    const shelfOptions = document.getElementById('shelfOptions');
+    const noShelfMessage = document.getElementById('noShelfMessage');
+    shelfOptions.innerHTML = '';
+
+    if (!data.success || !data.shelves || data.shelves.length === 0) {
+      noShelfMessage.style.display = 'block';
+      return;
+    }
+
+    noShelfMessage.style.display = 'none';
+
+    data.shelves.forEach(shelf => {
+      const btn = document.createElement('button');
+      btn.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+      btn.textContent = shelf.name;
+
+      if (shelf.already_added == 1) {
+        btn.classList.add('disabled', 'text-secondary');
+        const badge = document.createElement('span');
+        badge.className = 'badge bg-success rounded-pill';
+        badge.textContent = '✔ 已加入';
+        btn.appendChild(badge);
+      } else {
+        btn.onclick = () => addBookToShelf(shelf.shelf_id);
+      }
+
+      shelfOptions.appendChild(btn);
+    });
+
+    const modal = new bootstrap.Modal(document.getElementById('addToShelfModal'));
+    modal.show();
+  })
+  .catch(() => alert('無法載入書櫃列表，請稍後再試'));
+}
+
+function addBookToShelf(shelfId) {
+  if (!currentBookId) return;
+
+  fetch('/book-sharing-system/backend/add_to_shelf.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    credentials: 'include',
+    body: new URLSearchParams({
+      book_id: currentBookId,
+      shelf_id: shelfId
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert('✅ 書籍已成功加入書櫃');
+      const modal = bootstrap.Modal.getInstance(document.getElementById('addToShelfModal'));
+      modal.hide();
+
+      // 更新按鈕外觀
+      if (currentButton) {
+        currentButton.className = 'btn btn-success btn-sm';
+        currentButton.innerHTML = '✔ 已加入書櫃';
+      }
+
+      // 重新載入 Modal 書櫃狀態
+      addToShelfModal(currentBookId, currentButton);
+    } else {
+      alert('❌ ' + data.message);
+    }
+  })
+  .catch(() => alert('加入失敗，請稍後再試'));
+}
+</script>
+
 </body>
 </html>
 
@@ -226,25 +370,7 @@ if ($user_id) {
 </div>
 
 <script>
-function addToShelfModal(bookId, btn) {
-  fetch('/book-sharing-system/backend/add_to_shelf.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'book_id=' + bookId
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      btn.classList.remove('btn-outline-primary');
-      btn.classList.add('btn-success');
-      btn.innerText = '✔ 已加入書櫃';
-      btn.disabled = true;
-    } else {
-      alert('❌ 加入失敗：' + data.message);
-    }
-  })
-  .catch(() => alert("❌ 加入失敗"));
-}
+
 
 function loadNotifications() {
   fetch('/book-sharing-system/backend/notifications.php', { credentials: 'include' })
@@ -274,3 +400,7 @@ function loadNotifications() {
     .catch(() => alert("❌ 無法載入通知"));
 }
 </script>
+
+<script>
+  const joinedShelfMap = <?= json_encode($joinedShelfMap) ?>;
+</script> 
