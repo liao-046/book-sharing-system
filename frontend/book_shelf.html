@@ -173,12 +173,15 @@
 
   // 背景區點擊 => 啟動更新提示（排除子元素）
   document.getElementById('backgroundArea').addEventListener('click', (e) => {
-    if (e.target !== e.currentTarget) return;  // 避免點到子元素觸發
-    const newUrl = prompt('輸入新的背景圖片網址：');
-    if (newUrl && newUrl.trim()) {
-      updateBackground(newUrl.trim());
-    }
-  });
+  const excludeIds = ['shelfIcon', 'emojiPicker', 'backButton'];
+  if (excludeIds.some(id => e.target.closest(`#${id}`))) return;
+
+  const newUrl = prompt('輸入新的背景圖片網址：');
+  if (newUrl && newUrl.trim()) {
+    updateBackground(newUrl.trim());
+  }
+});
+
 
   function updateBackground(bgUrl) {
     fetch('/book-sharing-system/backend/update_shelf_bg.php', {
