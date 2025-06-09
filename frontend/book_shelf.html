@@ -102,10 +102,17 @@ fetch(`/book-sharing-system/backend/get_shelf_books.php?shelf_id=${shelfId}`)
         <img src="${book.cover_url || '/default_cover.jpg'}" class="card-img-top" alt="封面">
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">${book.title}</h5>
-          <p class="card-text mb-1"><strong>作者：</strong>${book.authors || '未知'}</p>
-          <button class="btn btn-outline-danger btn-sm mt-auto btn-remove" onclick="removeFromShelf(${book.book_id})">🗑️ 移除書籍</button>
+          <p class="card-text mb-3"><strong>作者：</strong>${book.authors || '未知'}</p>
+          <a href="/book-sharing-system/frontend/book_detail.php?book_id=${book.book_id}" class="btn btn-primary btn-sm mb-2 w-100">
+            🔍 查看詳情
+          </a>
+          <button class="btn btn-outline-danger btn-sm w-100" onclick="removeFromShelf(${book.book_id})">
+            🗑️ 移除書籍
+          </button>
         </div>
       `;
+
+
       col.appendChild(card);
       bookList.appendChild(col);
     });
@@ -130,4 +137,4 @@ function removeFromShelf(bookId) {
 }
 </script>
 </body>
-</html>
+</html> 
