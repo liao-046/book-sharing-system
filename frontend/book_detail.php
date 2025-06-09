@@ -283,6 +283,7 @@ function submitSilentShare() {
 }
 
 </script>
+<script src="/book-sharing-system/assets/js/silent_share_alert.js"></script>
 
 </body>
 </html>
