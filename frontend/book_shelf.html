@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>書櫃內容</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
   <style>
     body {
       background: #f8f9fa;
@@ -34,22 +35,31 @@
       font-size: 0.95rem;
       color: #555;
     }
-    .btn-remove {
-      margin-top: 8px;
-    }
     #emptyMessage {
       background-color: #e2f0ff;
       border: 1px solid #bee0ff;
       color: #0c5460;
     }
+    emoji-picker {
+      max-width: 300px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
 <div class="container">
-  <h3 class="mb-4">
-    <span id="shelfIcon">📁</span>
+  <h3 class="mb-3 position-relative">
+    <span id="shelfIcon" style="cursor: pointer;">📁</span>
     <span id="shelfName">我的書櫃</span>
+    <emoji-picker id="emojiPicker" style="display:none; position:absolute; top: 100%; left: 0; z-index: 1000;"></emoji-picker>
   </h3>
+
+  <!-- 背景圖片設定區塊 -->
+  <div class="mb-4">
+    <label for="bgInput" class="form-label">背景圖片網址：</label>
+    <input type="url" id="bgInput" class="form-control" placeholder="https://example.com/bg.jpg">
+    <button class="btn btn-outline-primary btn-sm mt-2" onclick="updateBackground()">更新背景</button>
+  </div>
 
   <div id="emptyMessage" class="alert text-center" style="display: none;">
     📭 目前書櫃是空的
@@ -62,79 +72,153 @@
 </div>
 
 <script>
-const shelfId = new URLSearchParams(location.search).get('shelf_id');
-if (!shelfId) {
-  alert('缺少 shelf_id');
-  location.href = 'index.html';
-}
+  const shelfId = new URLSearchParams(location.search).get('shelf_id');
+  if (!shelfId) {
+    alert('缺少 shelf_id');
+    location.href = 'index.html';
+  }
 
-fetch(`/book-sharing-system/backend/get_shelf_books.php?shelf_id=${shelfId}`)
-  .then(res => res.json())
-  .then(data => {
-    if (!data.success) {
-      alert(data.message);
-      return;
+  // 點 icon 彈出 emoji picker
+  document.getElementById('shelfIcon').addEventListener('click', () => {
+    const picker = document.getElementById('emojiPicker');
+    picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+  });
+
+  // 點 emoji 後更新 icon 並傳到後端
+  document.getElementById('emojiPicker').addEventListener('emoji-click', event => {
+    const emoji = event.detail.unicode;
+    document.getElementById('shelfIcon').textContent = emoji;
+    document.getElementById('emojiPicker').style.display = 'none';
+
+    fetch('/book-sharing-system/backend/update_shelf_icon.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ shelf_id: shelfId, icon: emoji })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          alert('更新失敗：' + data.message);
+        }
+      })
+      .catch(() => alert('無法更新 icon'));
+  });
+
+  // 點其他地方自動關閉 emoji picker
+  document.addEventListener('click', (e) => {
+    const picker = document.getElementById('emojiPicker');
+    const icon = document.getElementById('shelfIcon');
+    if (!picker.contains(e.target) && e.target !== icon) {
+      picker.style.display = 'none';
     }
+  });
 
-    const bookList = document.getElementById('bookList');
-    const emptyMessage = document.getElementById('emptyMessage');
-    const shelfName = document.getElementById('shelfName');
-
-    if (data.shelf_name) {
-      shelfName.textContent = data.shelf_name;
-    }
-
-    if (data.books.length === 0) {
-      emptyMessage.style.display = 'block';
-      return;
-    }
-
-    emptyMessage.style.display = 'none';
-
-    data.books.forEach(book => {
-      const col = document.createElement('div');
-      col.className = 'col-sm-6 col-md-4 col-lg-3';
-
-      const card = document.createElement('div');
-      card.className = 'card h-100';
-
-      card.innerHTML = `
-        <img src="${book.cover_url || '/default_cover.jpg'}" class="card-img-top" alt="封面">
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">${book.title}</h5>
-          <p class="card-text mb-3"><strong>作者：</strong>${book.authors || '未知'}</p>
-          <a href="/book-sharing-system/frontend/book_detail.php?book_id=${book.book_id}" class="btn btn-primary btn-sm mb-2 w-100">
-            🔍 查看詳情
-          </a>
-          <button class="btn btn-outline-danger btn-sm w-100" onclick="removeFromShelf(${book.book_id})">
-            🗑️ 移除書籍
-          </button>
-        </div>
-      `;
-
-
-      col.appendChild(card);
-      bookList.appendChild(col);
-    });
-  })
-  .catch(() => alert('無法載入書櫃資料'));
-
-function removeFromShelf(bookId) {
-  if (!confirm('確定要從書櫃中移除此書籍？')) return;
-  fetch(`/book-sharing-system/backend/remove_from_shelf.php`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ book_id: bookId, shelf_id: shelfId })
-  })
+  // 載入書櫃資料
+  fetch(`/book-sharing-system/backend/get_shelf_books.php?shelf_id=${shelfId}`)
     .then(res => res.json())
     .then(data => {
-      if (data.success) {
-        location.reload();
-      } else {
-        alert('移除失敗：' + data.message);
+      if (!data.success) {
+        alert(data.message);
+        return;
       }
-    });
-}
+
+      const bookList = document.getElementById('bookList');
+      const emptyMessage = document.getElementById('emptyMessage');
+      const shelfName = document.getElementById('shelfName');
+      const shelfIcon = document.getElementById('shelfIcon');
+
+      if ('shelf_name' in data) shelfName.textContent = data.shelf_name;
+      if ('icon' in data) shelfIcon.textContent = data.icon ?? '📁';
+
+      // 套用背景圖片
+      if ('background_url' in data && data.background_url) {
+        document.body.style.backgroundImage = `url('${data.background_url}')`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundAttachment = 'fixed';
+        document.body.style.backgroundPosition = 'center';
+        document.body.style.backgroundRepeat = 'no-repeat';
+        document.getElementById('bgInput').value = data.background_url;
+      }
+
+      if (!data.books || data.books.length === 0) {
+        emptyMessage.style.display = 'block';
+        return;
+      }
+
+      emptyMessage.style.display = 'none';
+
+      data.books.forEach(book => {
+        const col = document.createElement('div');
+        col.className = 'col-sm-6 col-md-4 col-lg-3';
+
+        const card = document.createElement('div');
+        card.className = 'card h-100';
+
+        card.innerHTML = `
+          <img src="${book.cover_url || '/default_cover.jpg'}" class="card-img-top" alt="封面">
+          <div class="card-body d-flex flex-column">
+            <h5 class="card-title">${book.title}</h5>
+            <p class="card-text mb-3"><strong>作者：</strong>${book.authors || '未知'}</p>
+            <a href="/book-sharing-system/frontend/book_detail.php?book_id=${book.book_id}" class="btn btn-primary btn-sm mb-2 w-100">
+              🔍 查看詳情
+            </a>
+            <button class="btn btn-outline-danger btn-sm w-100" onclick="removeFromShelf(${book.book_id})">
+              🗑️ 移除書籍
+            </button>
+          </div>
+        `;
+        col.appendChild(card);
+        bookList.appendChild(col);
+      });
+    })
+    .catch(() => alert('無法載入書櫃資料'));
+
+  // 移除書籍功能
+  function removeFromShelf(bookId) {
+    if (!confirm('確定要從書櫃中移除此書籍？')) return;
+    fetch('/book-sharing-system/backend/remove_from_shelf.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ book_id: bookId, shelf_id: shelfId })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          location.reload();
+        } else {
+          alert('移除失敗：' + data.message);
+        }
+      });
+  }
+
+  // 更新背景圖片功能
+  function updateBackground() {
+    const bgUrl = document.getElementById('bgInput').value.trim();
+    if (!bgUrl) {
+      alert('請輸入背景圖片網址');
+      return;
+    }
+
+    fetch('/book-sharing-system/backend/update_shelf_bg.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ shelf_id: shelfId, background_url: bgUrl })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          document.body.style.backgroundImage = `url('${bgUrl}')`;
+          document.body.style.backgroundSize = 'cover';
+          document.body.style.backgroundAttachment = 'fixed';
+          document.body.style.backgroundPosition = 'center';
+          document.body.style.backgroundRepeat = 'no-repeat';
+        } else {
+          alert('背景更新失敗：' + data.message);
+        }
+      })
+      .catch(() => alert('無法更新背景圖片'));
+  }
 </script>
+
 </body>
-</html> 
+</html>

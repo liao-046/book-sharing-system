@@ -40,6 +40,8 @@ CREATE TABLE book_shelf (
     shelf_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50),
     user_id INT,
+    icon VARCHAR(10),
+    background_url text,
     FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 

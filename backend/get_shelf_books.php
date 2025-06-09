@@ -15,7 +15,8 @@ if (!$user_id || !$shelf_id) {
     exit;
 }
 
-$stmt = $pdo->prepare("SELECT name FROM book_shelf WHERE shelf_id = ? AND user_id = ?");
+// ✅ 修正：補上 icon 欄位
+$stmt = $pdo->prepare("SELECT name, icon FROM book_shelf WHERE shelf_id = ? AND user_id = ?");
 $stmt->execute([$shelf_id, $user_id]);
 $shelf = $stmt->fetch();
 
@@ -24,7 +25,7 @@ if (!$shelf) {
     exit;
 }
 
-// ✅ 補上正確 SQL 查詢
+// 查詢書籍清單
 $stmt = $pdo->prepare("
     SELECT 
         b.book_id,
@@ -43,7 +44,8 @@ $stmt->execute([$shelf_id]);
 $books = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 echo json_encode([
-    'success' => true,
-    'shelf_name' => $shelf['name'],
-    'books' => $books
+  'success' => true,
+  'shelf_name' => $shelf['name'],
+  'icon' => $shelf['icon'] ?? '📁', // 這邊才會有值
+  'books' => $books
 ]);
