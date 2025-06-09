@@ -223,6 +223,25 @@ function addBookToShelf(shelfId) {
 }
 </script>
 
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  fetch("/book-sharing-system/backend/check_unlock_shares.php", { credentials: "include" })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && data.shares.length > 0) {
+        const msg = data.shares.map(s =>
+          `📘 書名：${s.title}\n👤 來自：${s.sender_name}\n📨 訊息：${s.message}`
+        ).join("\n\n");
+
+        if (confirm(`📬 你收到新的書籍分享：\n\n${msg}\n\n👉 點選「確定」立即前往書櫃查看`)) {
+          window.location.href = "/book-sharing-system/frontend/bookshelf_list.html";
+        }
+      }
+    });
+});
+</script>
+
+
 <!-- 書櫃選擇 Modal -->
 <div class="modal fade" id="addToShelfModal" tabindex="-1" aria-labelledby="addToShelfModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">

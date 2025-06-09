@@ -89,6 +89,7 @@ $user_name = $_SESSION['user_name'] ?? null;
   <div id="myReviewSection" class="mb-4"></div>
   <div id="otherReviewsSection"></div>
 </div>
+
 <!-- Silent Share Modal -->
 <div class="modal fade" id="silentShareModal" tabindex="-1">
   <div class="modal-dialog">
@@ -280,6 +281,7 @@ function submitSilentShare() {
     }
   });
 }
+
 </script>
 
 </body>
