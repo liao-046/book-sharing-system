@@ -6,13 +6,16 @@ require_once '../backend/db.php';
 $user_id = $_SESSION['user_id'] ?? null;
 $user_name = $_SESSION['user_name'] ?? null;
 
-// 撈取所有書籍與作者
+// 撈取所有書籍與作者 + 評分
 $stmt = $pdo->query("
   SELECT b.book_id, b.title, b.publisher, b.category, b.cover_url,
-         GROUP_CONCAT(a.name SEPARATOR ', ') AS authors
+         GROUP_CONCAT(a.name SEPARATOR ', ') AS authors,
+         ROUND(AVG(r.rating), 1) AS avg_rating,
+         COUNT(r.review_id) AS review_count
   FROM book b
   LEFT JOIN book_author ba ON b.book_id = ba.book_id
   LEFT JOIN author a ON ba.author_id = a.author_id
+  LEFT JOIN review r ON b.book_id = r.book_id
   GROUP BY b.book_id
   ORDER BY b.book_id DESC
 ");
@@ -41,7 +44,7 @@ if ($user_id) {
     body { background-color: #f8f9fa; }
     .book-card {
       width: 200px;
-      height: 500px;
+      height: 520px;
       margin-bottom: 20px;
       transition: transform 0.2s;
     }
@@ -91,9 +94,33 @@ if ($user_id) {
           <img src="<?= htmlspecialchars($cover) ?>" alt="封面" class="book-cover">
           <div class="card-body">
             <h5 class="card-title"><?= htmlspecialchars($book['title']) ?></h5>
-            <p class="card-text mb-1"><strong>作者：</strong><?= htmlspecialchars($book['authors']) ?: '未知' ?></p>
+
+            <?php
+$first_author = explode(',', $book['authors'] ?? '')[0] ?? '';
+$first_author = trim($first_author);
+$chars = preg_split('//u', $first_author, -1, PREG_SPLIT_NO_EMPTY);
+$short_author = implode('', array_slice($chars, 0, 5));
+$show_ellipsis = count($chars) > 5;
+?>
+<p class="card-text mb-1">
+  <strong>作者：</strong>
+  <span title="<?= htmlspecialchars($book['authors'] ?? '未知') ?>">
+    <?= htmlspecialchars($short_author . ($show_ellipsis ? '...' : '')) ?: '未知' ?>
+  </span>
+</p>
+
             <p class="card-text mb-1"><strong>出版社：</strong><?= htmlspecialchars($book['publisher']) ?: '未知' ?></p>
             <p class="card-text mb-2"><strong>分類：</strong><?= htmlspecialchars($book['category']) ?: '無' ?></p>
+            <p class="card-text mb-1">
+              <strong>評分：</strong>
+              <?php if (is_null($book['avg_rating'])): ?>
+                尚無評分
+              <?php else: ?>
+                <?= str_repeat('★', round($book['avg_rating'])) . str_repeat('☆', 5 - round($book['avg_rating'])) ?>
+                (<?= $book['avg_rating'] ?>/5)
+                <span class="text-muted">(<?= $book['review_count'] ?> 則評論)</span>
+              <?php endif; ?>
+            </p>
             <div class="d-grid gap-1">
               <?php if ($user_id): ?>
                 <?php if (in_array($book['book_id'], $addedBookIds)): ?>
@@ -125,9 +152,8 @@ function addToShelfModal(bookId, btn = null) {
   currentButton = btn;
 
   fetch(`/book-sharing-system/backend/get_shelves.php?book_id=${bookId}`, {
-  credentials: 'include'
-})
-
+    credentials: 'include'
+  })
   .then(res => res.json())
   .then(data => {
     const shelfOptions = document.getElementById('shelfOptions');
@@ -158,6 +184,7 @@ function addToShelfModal(bookId, btn = null) {
 
       shelfOptions.appendChild(btn);
     });
+
     const modal = new bootstrap.Modal(document.getElementById('addToShelfModal'));
     modal.show();
   })
@@ -205,9 +232,7 @@ function addBookToShelf(shelfId) {
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
       </div>
       <div class="modal-body">
-        <div id="shelfOptions" class="list-group">
-          <!-- 書櫃選項會在這裡動態插入 -->
-        </div>
+        <div id="shelfOptions" class="list-group"></div>
         <div id="noShelfMessage" class="text-muted text-center mt-3" style="display: none;">
           😢 你還沒有書櫃，請先建立一個。
         </div>
