@@ -5,6 +5,21 @@ require_once '../backend/db.php';
 $user_id = $_SESSION['user_id'] ?? null;
 $user_name = $_SESSION['user_name'] ?? null;
 
+// 取得使用者頭像（avatar）
+if ($user_id) {
+    $stmt_avatar = $pdo->prepare("SELECT avatar FROM user WHERE user_id = ?");
+    $stmt_avatar->execute([$user_id]);
+    $user_avatar = $stmt_avatar->fetchColumn();
+
+    // 頭像加時間戳避免快取問題
+    $avatar_url = $user_avatar
+      ? '/book-sharing-system/assets/img/' . $user_avatar . '?t=' . time()
+      : '/book-sharing-system/assets/img/default.png?t=' . time();
+} else {
+    $avatar_url = '/book-sharing-system/assets/img/default.png';
+}
+
+// 原本的書籍查詢
 $stmt = $pdo->query("
   SELECT b.book_id, b.title, b.publisher, b.category, b.cover_url,
          GROUP_CONCAT(a.name SEPARATOR ', ') AS authors,
@@ -54,6 +69,15 @@ if ($user_id) {
       object-fit: cover;
       border-bottom: 1px solid #ddd;
     }
+    .avatar-small {
+      width: 35px;
+      height: 35px;
+      border-radius: 0; /* 取消圓角，變方形 */
+      object-fit: cover;
+      vertical-align: middle;
+      margin-right: 8px;
+      border: 1.5px solid #ddd;
+    }
     button.btn-success[onclick]:hover::after {
       content: "（點擊可加入其他書櫃）";
       display: block;
@@ -72,6 +96,7 @@ if ($user_id) {
     </h2>
     <div>
       <?php if ($user_name): ?>
+        <img src="<?= htmlspecialchars($avatar_url) ?>" alt="頭像" class="avatar-small">
         👋 歡迎，<a href="/book-sharing-system/frontend/edit_profile.php" class="text-decoration-none"><?= htmlspecialchars($user_name) ?></a>
         <a href="/book-sharing-system/frontend/book_shelf_list.html" class="btn btn-outline-success btn-sm ms-2">📚 我的書櫃</a>
         <a href="/book-sharing-system/backend/logout.php" class="btn btn-outline-secondary btn-sm ms-2">登出</a>
@@ -80,13 +105,12 @@ if ($user_id) {
       <?php endif; ?>
     </div>
   </div>
-
   <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
     <?php foreach ($books as $book): ?>
       <div class="col">
         <div class="card book-card shadow-sm">
           <?php
-            $cover = !empty($book['cover_url']) ? $book['cover_url'] : '/book-sharing-system/assets/img/default_cover.png';
+            $cover = !empty($book['cover_url']) ? $book['cover_url'] : '/book-sharing-system/assets/img/default.png';
           ?>
           <img src="<?= htmlspecialchars($cover) ?>" alt="封面" class="book-cover">
           <div class="card-body">
@@ -207,13 +231,13 @@ function addBookToShelf(shelfId) {
       const modal = bootstrap.Modal.getInstance(document.getElementById('addToShelfModal'));
       modal.hide();
 
-      // ✅ 更新按鈕內容與樣式（保留 onclick）
+      // 更新按鈕內容與樣式（保留 onclick）
       if (currentButton) {
         currentButton.className = 'btn btn-success btn-sm';
         currentButton.innerHTML = '✔ 已加入書櫃';
       }
 
-      // ✅ 重新載入 Modal 書櫃狀態
+      // 重新載入 Modal 書櫃狀態
       addToShelfModal(currentBookId, currentButton);
     } else {
       alert('❌ ' + data.message);
@@ -228,32 +252,28 @@ document.addEventListener("DOMContentLoaded", () => {
   fetch("/book-sharing-system/backend/check_unlock_shares.php", { credentials: "include" })
     .then(res => res.json())
     .then(data => {
-      if (data.success && data.shares.length > 0) {
-        const msg = data.shares.map(s =>
-          `📘 書名：${s.title}\n👤 來自：${s.sender_name}\n📨 訊息：${s.message}`
-        ).join("\n\n");
-
-        if (confirm(`📬 你收到新的書籍分享：\n\n${msg}\n\n👉 點選「確定」立即前往書櫃查看`)) {
-          window.location.href = "/book-sharing-system/frontend/bookshelf_list.html";
-        }
+      if (data.success) {
+        console.log("解鎖共享清單數:", data.unlockedCount);
       }
-    });
+    })
+    .catch(err => console.error(err));
 });
 </script>
 
-
-<!-- 書櫃選擇 Modal -->
+<!-- Modal -->
 <div class="modal fade" id="addToShelfModal" tabindex="-1" aria-labelledby="addToShelfModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content shadow">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="addToShelfModalLabel">選擇書櫃</h5>
+        <h5 class="modal-title" id="addToShelfModalLabel">選擇要加入的書櫃</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
       </div>
       <div class="modal-body">
-        <div id="shelfOptions" class="list-group"></div>
-        <div id="noShelfMessage" class="text-muted text-center mt-3" style="display: none;">
-          😢 你還沒有書櫃，請先建立一個。
+        <div class="list-group" id="shelfOptions"></div>
+        <div id="noShelfMessage" class="text-center text-muted my-3" style="display:none;">
+          你尚未有任何書櫃，請先建立書櫃。
+          <br>
+          <a href="/book-sharing-system/frontend/book_shelf_list.html" class="btn btn-outline-primary mt-2">建立書櫃</a>
         </div>
       </div>
     </div>
