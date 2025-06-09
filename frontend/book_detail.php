@@ -3,27 +3,26 @@ session_start();
 require_once '../backend/db.php';
 
 $book_id = $_GET['book_id'] ?? null;
-
 if (!$book_id) {
-  echo "錯誤：未提供書籍 ID";
-  exit;
+    echo "錯誤：未提供書籍 ID";
+    exit;
 }
 
+// 取得書籍資料
 $stmt = $pdo->prepare("
-  SELECT b.book_id, b.title, b.publisher, b.category, b.cover_url, b.description,
-         GROUP_CONCAT(a.name SEPARATOR ', ') AS authors
-  FROM book b
-  LEFT JOIN book_author ba ON b.book_id = ba.book_id
-  LEFT JOIN author a ON ba.author_id = a.author_id
-  WHERE b.book_id = ?
-  GROUP BY b.book_id
+    SELECT b.book_id, b.title, b.publisher, b.category, b.cover_url, b.description,
+           GROUP_CONCAT(a.name SEPARATOR ', ') AS authors
+    FROM book b
+    LEFT JOIN book_author ba ON b.book_id = ba.book_id
+    LEFT JOIN author a ON ba.author_id = a.author_id
+    WHERE b.book_id = ?
+    GROUP BY b.book_id
 ");
 $stmt->execute([$book_id]);
 $book = $stmt->fetch(PDO::FETCH_ASSOC);
-
 if (!$book) {
-  echo "找不到這本書";
-  exit;
+    echo "找不到這本書";
+    exit;
 }
 
 $user_id = $_SESSION['user_id'] ?? null;
@@ -46,6 +45,14 @@ $user_name = $_SESSION['user_name'] ?? null;
     }
     .star { font-size: 1.5rem; color: gold; cursor: pointer; }
     .star:hover, .star:hover ~ .star { color: orange; }
+    .review-avatar {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-right: 0.5rem;
+      border: 1px solid #ccc;
+    }
   </style>
 </head>
 <body>
@@ -77,11 +84,8 @@ $user_name = $_SESSION['user_name'] ?? null;
       <?php if ($user_id): ?>
         <button class="btn btn-outline-dark mt-3" onclick="openSilentShareModal()">📩 靜音分享</button>
       <?php endif; ?>
-
     </div>
   </div>
-
-
 
   <!-- 評論區 -->
   <hr>
@@ -162,13 +166,17 @@ function loadReviews() {
       data.reviews
         .filter(r => r.user_id != userId)
         .forEach(r => {
+          const avatarUrl = r.avatar ? `/book-sharing-system/assets/img/${r.avatar}` : '/book-sharing-system/assets/img/default.png';
           const div = document.createElement('div');
-          div.className = 'border-bottom py-2';
+          div.className = 'border-bottom py-3 d-flex';
           div.innerHTML = `
-            <strong>${r.user_name}</strong>：
-            <span class="text-warning">${renderStars(r.rating)}</span><br>
-            <small class="text-muted">${r.create_time}</small><br>
-            ${r.comment ? `<p class="mb-1">${r.comment}</p>` : ''}
+            <img src="${avatarUrl}" alt="頭像" class="review-avatar" onerror="this.src='/book-sharing-system/assets/img/default.png'">
+            <div>
+              <strong>${r.user_name}</strong><br>
+              <span class="text-warning">${renderStars(r.rating)}</span><br>
+              <small class="text-muted">${r.create_time}</small><br>
+              ${r.comment ? `<p class="mb-1">${r.comment}</p>` : ''}
+            </div>
           `;
           otherReviewsSection.appendChild(div);
         });
@@ -239,7 +247,6 @@ function deleteReview() {
 }
 
 function editReview() {
-  // 同 submitReview，可擴充為可編輯介面（略）
   alert('請先刪除原評論再新增（可改為完整的編輯 UI）');
 }
 
@@ -298,8 +305,6 @@ function submitSilentShare() {
     alert("⚠️ 系統錯誤：" + err.message);
   });
 }
-
-
 </script>
 <script src="/book-sharing-system/assets/js/silent_share_alert.js"></script>
 
