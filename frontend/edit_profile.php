@@ -38,14 +38,15 @@ $success = $_GET['success'] ?? null;
     </div>
 
     <div class="mb-3">
-      <label for="current_password" class="form-label">🔒 目前密碼 <span class="text-danger">*</span></label>
-      <input type="password" class="form-control" id="current_password" name="current_password" required>
-    </div>
+  <label for="current_password" class="form-label">目前密碼（如要更改密碼才需填寫）</label>
+  <input type="password" class="form-control" id="current_password" name="current_password">
+</div>
 
-    <div class="mb-3">
-      <label for="password" class="form-label">🆕 新密碼（可留空不變更）</label>
-      <input type="password" class="form-control" id="password" name="password">
-    </div>
+<div class="mb-3">
+  <label for="password" class="form-label">🆕 新密碼（可留空不變更）</label>
+  <input type="password" class="form-control" id="password" name="password">
+</div>
+
 
     <div class="d-flex justify-content-between">
       <a href="index.php" class="btn btn-secondary">← 返回首頁</a>
