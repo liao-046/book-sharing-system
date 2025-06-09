@@ -226,6 +226,26 @@ if ($user_id) {
 </div>
 
 <script>
+function addToShelfModal(bookId, btn) {
+  fetch('/book-sharing-system/backend/add_to_shelf.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'book_id=' + bookId
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      btn.classList.remove('btn-outline-primary');
+      btn.classList.add('btn-success');
+      btn.innerText = '✔ 已加入書櫃';
+      btn.disabled = true;
+    } else {
+      alert('❌ 加入失敗：' + data.message);
+    }
+  })
+  .catch(() => alert("❌ 加入失敗"));
+}
+
 function loadNotifications() {
   fetch('/book-sharing-system/backend/notifications.php', { credentials: 'include' })
     .then(res => res.json())
