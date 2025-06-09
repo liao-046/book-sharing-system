@@ -41,6 +41,7 @@ if ($user_id) {
     body { background-color: #f8f9fa; }
     .book-card {
       width: 200px;
+      height: 500px;
       margin-bottom: 20px;
       transition: transform 0.2s;
     }
@@ -54,11 +55,11 @@ if ($user_id) {
       border-bottom: 1px solid #ddd;
     }
     button.btn-success[onclick]:hover::after {
-    content: "（點擊可加入其他書櫃）";
-    display: block;
-    font-size: 0.75rem;
-    color:rgb(205, 249, 205);
-    margin-top: 4px;
+      content: "（點擊可加入其他書櫃）";
+      display: block;
+      font-size: 0.75rem;
+      color: rgb(205, 249, 205);
+      margin-top: 4px;
     }
   </style>
 </head>
@@ -84,27 +85,29 @@ if ($user_id) {
     <?php foreach ($books as $book): ?>
       <div class="col">
         <div class="card book-card shadow-sm">
-          <img src="<?= htmlspecialchars($book['cover_url']) ?>" alt="封面" class="book-cover"
-               onerror="this.src='/book-sharing-system/assets/img/default_cover.png'">
+          <?php
+            $cover = !empty($book['cover_url']) ? $book['cover_url'] : '/book-sharing-system/assets/img/default_cover.png';
+          ?>
+          <img src="<?= htmlspecialchars($cover) ?>" alt="封面" class="book-cover">
           <div class="card-body">
             <h5 class="card-title"><?= htmlspecialchars($book['title']) ?></h5>
             <p class="card-text mb-1"><strong>作者：</strong><?= htmlspecialchars($book['authors']) ?: '未知' ?></p>
             <p class="card-text mb-1"><strong>出版社：</strong><?= htmlspecialchars($book['publisher']) ?: '未知' ?></p>
             <p class="card-text mb-2"><strong>分類：</strong><?= htmlspecialchars($book['category']) ?: '無' ?></p>
             <div class="d-grid gap-1">
-  <?php if ($user_id): ?>
-    <?php if (in_array($book['book_id'], $addedBookIds)): ?>
-      <button class="btn btn-success btn-sm" onclick="addToShelfModal(<?= $book['book_id'] ?>, this)">
-        ✔ 已加入書櫃
-      </button>
-    <?php else: ?>
-      <button class="btn btn-outline-primary btn-sm" onclick="addToShelfModal(<?= $book['book_id'] ?>, this)">
-        ➕ 加入書櫃
-      </button>
-    <?php endif; ?>
-  <?php endif; ?>
-  <a href="/book-sharing-system/frontend/book_detail.php?book_id=<?= $book['book_id'] ?>" class="btn btn-info btn-sm">🔍 查看詳情</a>
-</div>
+              <?php if ($user_id): ?>
+                <?php if (in_array($book['book_id'], $addedBookIds)): ?>
+                  <button class="btn btn-success btn-sm" onclick="addToShelfModal(<?= $book['book_id'] ?>, this)">
+                    ✔ 已加入書櫃
+                  </button>
+                <?php else: ?>
+                  <button class="btn btn-outline-primary btn-sm" onclick="addToShelfModal(<?= $book['book_id'] ?>, this)">
+                    ➕ 加入書櫃
+                  </button>
+                <?php endif; ?>
+              <?php endif; ?>
+              <a href="/book-sharing-system/frontend/book_detail.php?book_id=<?= $book['book_id'] ?>" class="btn btn-info btn-sm">🔍 查看詳情</a>
+            </div>
           </div>
         </div>
       </div>
@@ -138,22 +141,22 @@ function addToShelfModal(bookId, btn = null) {
     noShelfMessage.style.display = 'none';
 
     data.shelves.forEach(shelf => {
-    const btn = document.createElement('button');
-    btn.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
-    btn.textContent = shelf.name;
+      const btn = document.createElement('button');
+      btn.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+      btn.textContent = shelf.name;
 
-  if (shelf.already_added) {
-    btn.classList.add('disabled', 'text-secondary');
-    const badge = document.createElement('span');
-    badge.className = 'badge bg-success rounded-pill';
-    badge.textContent = '✔ 已加入';
-    btn.appendChild(badge);
-  } else {
-    btn.onclick = () => addBookToShelf(shelf.shelf_id);
-  }
+      if (shelf.already_added) {
+        btn.classList.add('disabled', 'text-secondary');
+        const badge = document.createElement('span');
+        badge.className = 'badge bg-success rounded-pill';
+        badge.textContent = '✔ 已加入';
+        btn.appendChild(badge);
+      } else {
+        btn.onclick = () => addBookToShelf(shelf.shelf_id);
+      }
 
-  shelfOptions.appendChild(btn);
-});
+      shelfOptions.appendChild(btn);
+    });
     const modal = new bootstrap.Modal(document.getElementById('addToShelfModal'));
     modal.show();
   })
