@@ -32,7 +32,7 @@ if (!$recipient) {
 
 $receiver_id = $recipient['user_id'];
 
-// 插入 silent_share 資料，包含 sender_id
+// 插入 silent_share 資料，新增 sender_id 欄位
 $stmt = $pdo->prepare("
   INSERT INTO silent_share (message, create_time, unlock_condition, is_open, open_time, sender_id)
   VALUES (?, NOW(), '', 1, ?, ?)
