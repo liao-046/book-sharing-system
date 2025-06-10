@@ -58,17 +58,17 @@ CREATE TABLE review (
     FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
 );
 
-    -- 靜默分享表
-    CREATE TABLE silent_share (
-        silent_share_id INT AUTO_INCREMENT PRIMARY KEY,
-        message TEXT,
-        create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-        unlock_condition VARCHAR(255),
-        is_open BOOLEAN DEFAULT FALSE,
-        open_time DATETIME
-    );
+-- 靜默分享表
+CREATE TABLE silent_share (
+    silent_share_id INT AUTO_INCREMENT PRIMARY KEY,
+    message TEXT,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    unlock_condition VARCHAR(255),
+    is_open BOOLEAN DEFAULT FALSE,
+    open_time DATETIME
+);
 
-    -- 分享書籍關聯表
+-- 分享書籍關聯表
     CREATE TABLE share_book (
         silent_share_id INT,
         book_id INT,
@@ -103,4 +103,21 @@ CREATE TABLE password_reset_tokens (
     token VARCHAR(100) UNIQUE,
     expires_at DATETIME,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 通知用 notifications 表
+CREATE TABLE notifications (
+    notification_id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    sender_id INT(11),
+    receiver_id INT(11),
+    book_title VARCHAR(255),
+    message TEXT,
+    notify_time DATETIME,
+    user_id INT(11) NOT NULL,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    is_read TINYINT(1) DEFAULT 0,
+    INDEX (user_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (sender_id) REFERENCES users(user_id),
+    FOREIGN KEY (receiver_id) REFERENCES users(user_id)
 );

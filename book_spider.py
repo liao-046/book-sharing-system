@@ -81,11 +81,11 @@ def save_book_to_db(conn, book):
 if __name__ == '__main__':
     # 資料庫連線設定
     db_config = {
-        'host': '127.0.0.1',
+        'host': '140.122.184.128',
         'port': 3306,
-        'user': 'admin',
-        'password': 'Admin1234!',
-        'database': 'book_system',
+        'user': 'team19',
+        'password': 'Wy$Kq83Nbm',
+        'database': 'team19',
         'charset': 'utf8mb4'
     }
 
