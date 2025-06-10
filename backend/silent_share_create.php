@@ -34,6 +34,21 @@ if (!$recipient) {
 }
 $receiver_id = $recipient['user_id'];
 
+// 4.1. Check for duplicate silent share (same book, same receiver, same message from this sender)
+$stmt = $pdo->prepare("
+  SELECT COUNT(*) FROM silent_share ss
+  JOIN share_book sb ON ss.silent_share_id = sb.silent_share_id
+  JOIN receives r ON r.silent_share_id = ss.silent_share_id
+  WHERE ss.sender_id = ? AND r.user_id = ? AND sb.book_id = ? AND ss.message = ?
+");
+$stmt->execute([$user_id, $receiver_id, $book_id, $message]);
+$duplicateCount = $stmt->fetchColumn();
+
+if ($duplicateCount > 0) {
+  echo "error: 相同書籍與訊息已傳送給該用戶";
+  exit;
+}
+
 // 5. Insert into silent_share table
 $stmt = $pdo->prepare("
   INSERT INTO silent_share (message, create_time, unlock_condition, is_open, open_time, sender_id)
