@@ -137,3 +137,15 @@ CREATE TABLE notifications (
     FOREIGN KEY (sender_id) REFERENCES users(user_id),
     FOREIGN KEY (receiver_id) REFERENCES users(user_id)
 );
+
+-- 書籍開啟確認表：紀錄靜默分享是否已查看
+CREATE TABLE IF NOT EXISTS share_confirmation (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sender_id INT NOT NULL,
+    receiver_id INT NOT NULL,
+    book_id INT NOT NULL,
+    view_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (sender_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (receiver_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (book_id) REFERENCES book(book_id) ON DELETE CASCADE
+);
