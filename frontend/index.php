@@ -349,29 +349,7 @@ function addBookToShelf(shelfId) {
 </body>
 </html>
 
-<!-- 通知按鈕 -->
-<button class="btn btn-warning btn-sm" onclick="loadNotifications()">🔔 通知</button>
-
-<!-- 通知 Modal -->
-<div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="notificationModalLabel">🔔 我的通知</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
-      </div>
-      <div class="modal-body">
-        <ul class="list-group" id="notificationList">
-          <li class="list-group-item text-muted">正在載入通知...</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
-
 <script>
-
-
 function loadNotifications() {
   fetch('/book-sharing-system/backend/notifications.php', { credentials: 'include' })
     .then(res => res.json())
