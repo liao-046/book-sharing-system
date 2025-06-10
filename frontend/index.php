@@ -20,7 +20,7 @@ if ($user_id) {
         ? '/book-sharing-system/assets/img/' . $user_avatar . '?t=' . time()
         : '/book-sharing-system/assets/img/default.png?t=' . time();
 } else {
-    $avatar_url = '/book-sharing-system/assets/img/default_cover.png';
+    $avatar_url = '/book-sharing-system/assets/img/default.png';
 }
 
 // 取得搜尋與排序參數
@@ -202,7 +202,11 @@ if ($user_id) {
     <?php foreach ($books as $book): ?>
       <div class="col">
         <div class="card book-card shadow-sm">
-          <img src="<?= htmlspecialchars($book['cover_url'] ?? '/book-sharing-system/assets/img/default.png') ?>" alt="封面" class="book-cover">
+        <img src="<?= htmlspecialchars($book['cover_url']) ?: '/book-sharing-system/assets/img/default_cover.png' ?>" 
+     alt="封面" 
+     class="book-cover"
+     onerror="this.onerror=null;this.src='/book-sharing-system/assets/img/default_cover.png';">
+
           <div class="card-body">
             <h5 class="card-title"><?= htmlspecialchars($book['title']) ?></h5>
             <p class="card-text mb-1">
