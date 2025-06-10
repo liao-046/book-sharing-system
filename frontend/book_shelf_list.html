@@ -61,6 +61,28 @@
     .add-btn i {
       font-size: 1.2rem;
     }
+    .btn-silent-share {
+  background-color: #f3f4f6;
+  border: 1px solid #ced4da;
+  color: #343a40;
+  font-weight: 500;
+  padding: 10px 16px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  text-decoration: none;
+}
+
+.btn-silent-share:hover {
+  background-color: #e2e6ea;
+  color: #212529;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
   </style>
 </head>
 <body>
@@ -70,10 +92,13 @@
       <a href="index.php" class="btn btn-outline-secondary">← 返回首頁</a>
     </div>
   
-    <!-- 新增：靜音分享書櫃按鈕靠右 -->
-    <div class="d-flex justify-content-end mb-3">
-      <a href="my_shared_books.php" class="btn btn-outline-primary">📚 我的靜音分享書櫃</a>
-    </div>
+  <!-- 美化後：靜音分享書櫃按鈕 -->
+<div class="d-flex justify-content-end mb-3">
+  <a href="my_shared_books.php" class="btn btn-silent-share shadow-sm">
+    🤫 <strong>靜音分享書櫃</strong>
+  </a>
+</div>
+
     <div id="shelfList" class="mb-4">
       <div class="text-muted">載入中...</div>
     </div>

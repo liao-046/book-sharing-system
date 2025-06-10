@@ -13,12 +13,14 @@ CREATE TABLE user (
 
 -- 書籍表
 CREATE TABLE book (
-    book_id INT AUTO_INCREMENT PRIMARY KEY,
+    book_id INT(11) NOT NULL AUTO_INCREMENT,
     title VARCHAR(200) NOT NULL,
-    publisher VARCHAR(100),
-    category VARCHAR(50),
-    cover_url VARCHAR(255),
-    description TEXT
+    publisher VARCHAR(100) DEFAULT NULL,
+    category VARCHAR(50) DEFAULT NULL,
+    cover_url VARCHAR(255) DEFAULT NULL,
+    description TEXT DEFAULT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (book_id)
 );
 
 -- 作者表
@@ -60,31 +62,45 @@ CREATE TABLE review (
 
 -- 靜默分享表
 CREATE TABLE silent_share (
-    silent_share_id INT AUTO_INCREMENT PRIMARY KEY,
-    message TEXT,
+    silent_share_id INT(11) NOT NULL AUTO_INCREMENT,
+    message TEXT DEFAULT NULL,
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    unlock_condition VARCHAR(255),
-    is_open BOOLEAN DEFAULT FALSE,
-    open_time DATETIME
+    unlock_condition VARCHAR(255) DEFAULT NULL,
+    is_open TINYINT(1) DEFAULT 0,
+    open_time DATETIME DEFAULT NULL,
+    sender_id INT(11) DEFAULT NULL,
+    unlock_time DATETIME NOT NULL,
+    PRIMARY KEY (silent_share_id),
+    KEY idx_sender_id (sender_id),
+    CONSTRAINT fk_silent_share_sender FOREIGN KEY (sender_id) REFERENCES user(user_id)
 );
+
 
 -- 分享書籍關聯表
     CREATE TABLE share_book (
-        silent_share_id INT,
-        book_id INT,
-        PRIMARY KEY (silent_share_id, book_id),
-        FOREIGN KEY (silent_share_id) REFERENCES silent_share(silent_share_id) ON DELETE CASCADE,
-    FOREIGN KEY (book_id) REFERENCES book(book_id) ON DELETE CASCADE
+    silent_share_id INT(11) NOT NULL,
+    book_id INT(11) NOT NULL,
+    sender_id INT(11) DEFAULT NULL,
+    PRIMARY KEY (silent_share_id, book_id),
+    FOREIGN KEY (silent_share_id) REFERENCES silent_share(silent_share_id),
+    FOREIGN KEY (book_id) REFERENCES book(book_id),
+    FOREIGN KEY (sender_id) REFERENCES user(user_id)
 );
+
 
 -- 使用者收到分享關聯表                 
 CREATE TABLE receives (
-    user_id INT,
-    silent_share_id INT,
+    user_id INT(11) NOT NULL,
+    silent_share_id INT(11) NOT NULL,
+    shown TINYINT(1) DEFAULT NULL,
+    unlocked TINYINT(1) DEFAULT 0,
+    is_open TINYINT(1) NOT NULL DEFAULT 0,
+    open_time DATETIME DEFAULT NULL,
     PRIMARY KEY (user_id, silent_share_id),
-    FOREIGN KEY (silent_share_id) REFERENCES silent_share(silent_share_id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES user(user_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES user(user_id),
+    FOREIGN KEY (silent_share_id) REFERENCES silent_share(silent_share_id)
 );
+
 
 -- 書櫃紀錄表
 CREATE TABLE bookshelf_record (
@@ -120,4 +136,16 @@ CREATE TABLE notifications (
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (sender_id) REFERENCES users(user_id),
     FOREIGN KEY (receiver_id) REFERENCES users(user_id)
+);
+
+-- 書籍開啟確認表：紀錄靜默分享是否已查看
+CREATE TABLE IF NOT EXISTS share_confirmation (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sender_id INT NOT NULL,
+    receiver_id INT NOT NULL,
+    book_id INT NOT NULL,
+    view_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (sender_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (receiver_id) REFERENCES user(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (book_id) REFERENCES book(book_id) ON DELETE CASCADE
 );
