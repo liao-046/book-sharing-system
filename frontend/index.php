@@ -167,11 +167,19 @@ if ($user_id) {
   <img src="<?= htmlspecialchars($avatar_url) ?>" alt="頭像" class="avatar-small">
   👋 歡迎，<a href="/book-sharing-system/frontend/edit_profile.php" class="text-decoration-none"><?= htmlspecialchars($user_name) ?></a>
   
-  <a href="/book-sharing-system/frontend/book_shelf_list.html" class="btn btn-outline-success btn-sm ms-2">📚 我的書櫃</a>
+  <a href="/book-sharing-system/frontend/book_shelf_list.html" class="btn btn-outline-success btn-sm ms-2" style="display: inline-flex; align-items: center;">
+  <img src="/book-sharing-system/assets/img/bookcase.png" alt="我的書櫃" style="height: 1em; margin-right: 6px;">
+  我的書櫃
+</a>
+
   <a href="/book-sharing-system/frontend/my_shared_books.php" class="btn btn-outline-dark btn-sm ms-2" style="display: inline-flex; align-items: center;">
     <img src="/book-sharing-system/assets/img/22512_color.png" alt="分享" style="height: 1em; margin-right: 4px;">我的分享
   </a>
-  <a href="/book-sharing-system/frontend/notifications.php" class="btn btn-warning btn-sm ms-2">🔔 通知中心</a>
+  <a href="/book-sharing-system/frontend/notifications.php" class="btn btn-warning btn-sm ms-2" style="display: inline-flex; align-items: center;">
+  <img src="/book-sharing-system/assets/img/bell.png" alt="通知" style="height: 1em; margin-right: 6px;">
+  通知中心
+</a>
+
   <a href="/book-sharing-system/backend/logout.php" class="btn btn-outline-secondary btn-sm ms-2">登出</a>
 <?php else: ?>
   <a href="/book-sharing-system/frontend/login.html" class="btn btn-primary">登入</a>
