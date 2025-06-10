@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once '../backend/db.php';
-// 檢查使用者是否登入
+
 $user_id = $_SESSION['user_id'] ?? null;
 $user_name = $_SESSION['user_name'] ?? null;
 $myShelves = [];
@@ -20,7 +20,7 @@ if ($user_id) {
         ? '/book-sharing-system/assets/img/' . $user_avatar . '?t=' . time()
         : '/book-sharing-system/assets/img/default.png?t=' . time();
 } else {
-    $avatar_url = '/book-sharing-system/assets/img/default_cover.png';
+    $avatar_url = '/book-sharing-system/assets/img/default.png';
 }
 
 // 取得搜尋與排序參數
@@ -146,13 +146,6 @@ if ($user_id) {
       margin-right: 8px;
       border: 1.5px solid #ddd;
     }
-    .search-input {
-      background-image: url('/book-sharing-system/assets/img/search.png');
-      background-repeat: no-repeat;
-      background-position: 8px center;
-      background-size: 1em 1em;
-      padding-left: 30px;
-    }
   </style>
 </head>
 <body>
@@ -168,9 +161,7 @@ if ($user_id) {
   👋 歡迎，<a href="/book-sharing-system/frontend/edit_profile.php" class="text-decoration-none"><?= htmlspecialchars($user_name) ?></a>
   
   <a href="/book-sharing-system/frontend/book_shelf_list.html" class="btn btn-outline-success btn-sm ms-2">📚 我的書櫃</a>
-  <a href="/book-sharing-system/frontend/my_shared_books.php" class="btn btn-outline-dark btn-sm ms-2" style="display: inline-flex; align-items: center;">
-    <img src="/book-sharing-system/assets/img/22512_color.png" alt="分享" style="height: 1em; margin-right: 4px;">我的分享
-  </a>
+  <a href="/book-sharing-system/frontend/my_shared_books.php" class="btn btn-outline-dark btn-sm ms-2">📤 我的分享</a>
   <a href="/book-sharing-system/frontend/notifications.php" class="btn btn-warning btn-sm ms-2">🔔 通知中心</a>
   <a href="/book-sharing-system/backend/logout.php" class="btn btn-outline-secondary btn-sm ms-2">登出</a>
 <?php else: ?>
@@ -182,13 +173,11 @@ if ($user_id) {
 
   <form method="get" class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
   <!-- 搜尋欄，盡量拉長 -->
-  <div class="input-group flex-grow-1" style="min-width: 250px;">
-    <span class="input-group-text bg-white border-end-0">
-      <img src="/book-sharing-system/assets/img/search.png" alt="搜尋" style="height: 1em; width: auto;">
-    </span>
-    <input type="text" name="q" class="form-control border-start-0" placeholder="搜尋書名或作者" value="<?= htmlspecialchars($search) ?>">
-  </div>
+  <input type="text" name="q" class="form-control flex-grow-1" style="min-width: 250px;"
+         placeholder="🔍 搜尋書名或作者"
+         value="<?= htmlspecialchars($search) ?>">
 
+  <!-- 包裹一層容器，用 justify-content-end 靠右 -->
 <div class="d-flex justify-content-end">
 <div class="d-flex flex-nowrap gap-2 ms-auto">
     <select name="sort" class="form-select" style="width: 120px;">
@@ -360,7 +349,29 @@ function addBookToShelf(shelfId) {
 </body>
 </html>
 
+<!-- 通知按鈕 -->
+<button class="btn btn-warning btn-sm" onclick="loadNotifications()">🔔 通知</button>
+
+<!-- 通知 Modal -->
+<div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="notificationModalLabel">🔔 我的通知</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="關閉"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-group" id="notificationList">
+          <li class="list-group-item text-muted">正在載入通知...</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
+
+
 function loadNotifications() {
   fetch('/book-sharing-system/backend/notifications.php', { credentials: 'include' })
     .then(res => res.json())
