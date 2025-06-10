@@ -13,6 +13,14 @@ if (empty($name) || empty($email) || empty($password)) {
     exit;
 }
 
+// Check if name already exists
+$stmt = $pdo->prepare("SELECT * FROM user WHERE name = ?");
+$stmt->execute([$name]);
+if ($stmt->fetch()) {
+  echo json_encode(["success" => false, "message" => "此使用者名稱已被使用"]);
+  exit;
+}
+
 // ✅ Email 格式檢查
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     echo json_encode(['success' => false, 'message' => 'Email 格式不正確'], JSON_UNESCAPED_UNICODE);
